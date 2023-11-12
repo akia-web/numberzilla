@@ -1,0 +1,30 @@
+.container-action{
+    background-color: rebeccapurple;
+    padding: 10px;
+    border-radius: 7px;
+    display: inline-block;
+    position: fixed;
+    top: 65px ;
+}
+
+svg{
+    fill: white;
+    width: 40px;
+    transition: 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+svg:hover{
+    fill: #ff35a0
+}
+
+h1{
+    color: white;
+    font-size: 20px;
+    margin-bottom: 1em;
+}
+
+.container{
+    display: flex;
+    justify-content: space-around;
+}

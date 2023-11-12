@@ -1,0 +1,99 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+span{
+    padding: 0 8px;
+    font-size: 2em;
+    border: 1px solid #554949;
+    cursor: pointer;
+}
+
+span:hover{
+    background-color: aqua;
+}
+
+.active{
+    background-color: aqua 
+}
+
+.main{
+    width: 60%;
+    margin: 3em 0;
+    text-align: center;
+}
+
+.proposal{
+    background-color: #b981a8;
+    border: 1px dotted #ffffff;
+}
+
+.container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.left-right{
+    width: 35%;
+    position: relative;
+    background-color: red;
+
+}
+
+h1{
+    color: white;
+    margin-bottom: 1em;
+}
+
+.green{
+    color: #37f537
+}
+
+.yellow{
+    color: yellow
+}
+
+.white{
+    color: white
+}
+
+.blue{
+    color: lightblue
+}
+
+.pink{
+    color: #ff21b9
+}
+.not-visible{
+    color: #3f3e3e9c;
+}
+
+.removeLine{
+    animation-name: removeLine;
+    animation-duration: 0.2s;
+    animation-iteration-count: 1;
+    animation-timing-function: linear ;
+    animation-fill-mode: forwards;
+}
+
+
+@keyframes removeLine{
+    0%{
+       background-color:  rgb(33 22 59);
+    }
+    10%{
+        background-color: lightgreen;
+    }
+    11%{
+        background-color: lightgreen;
+
+    }90%{
+        background-color: lightgreen;
+    }
+    100%{
+       background-color:  rgb(33 22 59);
+    }
+}
+
