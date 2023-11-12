@@ -7,7 +7,7 @@
       <!-- 'proposal': bidule.proposal -->
       <span 
         v-for="caseLine in item" 
-        :class="{'active': caseLine!.active ,[caseLine.color]: true, 'not-visible': !caseLine!.visible, ['ligne-'+caseLine.indexLigne]: true, 'proposal': caseLine!.proposal}"
+        :class="{'active': caseLine!.active ,[caseLine.color]: true, 'not-visible': !caseLine!.visible, ['ligne-'+caseLine.indexLigne]: true}"
         @click="activeCase(caseLine)">{{ caseLine!.number }}</span>
     </div>
   </div>
