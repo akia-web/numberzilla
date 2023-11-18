@@ -12,8 +12,9 @@
     </div>
   </div>
     <div class="left-right">
-      <Action @reloadGame="handleReloadGame" @addLine="handleAddLine" :score="score"/>
+      <Action @open-popup="handleOpenPopup" @addLine="handleAddLine" :score="score"/>
     </div>
+    <Popup v-if="openPopup" @choice="handlePopupChoice"/>
   </div>
  
 </template>
@@ -24,12 +25,14 @@ import {Case} from "@/types/case"
 import {NearCase} from "@/types/nearCase"
 import {GameRecord} from "@/types/gameRecord"
 import Action from '@/components/actions/Actions.vue'
+import Popup from '@/components/popup/popup.vue'
 const recordGame = ref<GameRecord>({game:null, score:null})
 const game = ref<Case[][]>([])
 const caseSelected1 = ref<Case | null>(null);
 let possibility = ref<NearCase|null>(null)
 let score = ref<number>(0)
 let lastSelectedColor = ref<string>('white')
+let openPopup = ref<boolean>(false);
 
 const color: string[] = ['blue', 'pink', 'green', 'yellow', 'white']
 
@@ -343,9 +346,11 @@ const activeCase = (item : Case) => {
   }
 };
 
-const handleReloadGame = () => {
-  createGame(10,7)
-  save()
+const handleOpenPopup = () => {
+  openPopup.value = true;
+  console.log('popup')
+  // createGame(10,7)
+  // save()
 }
 const handleAddLine = () => {
   let indexColor = Math.floor(Math.random() * (4 - 1 + 1)) + 1
@@ -368,6 +373,14 @@ const handleAddLine = () => {
     })
   }
   save()
+}
+
+const handlePopupChoice = (e:any) => {
+  if(e === 'oui'){
+      createGame(10,7)
+      save()
+  }
+  openPopup.value = false
 }
 
 const save = () => {
