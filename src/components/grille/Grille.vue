@@ -8,8 +8,8 @@
       <span 
         v-for="caseLine in item" 
         :key="caseLine.indexColonne"
-        :class="{'active': caseLine.active ,[caseLine.color]: true, 'not-visible': !caseLine.visible, ['ligne-'+caseLine.indexLigne]: true, 'soluce': caseLine.soluce}"
-        @click="activeCase(caseLine)">
+        :class="{'active': caseLine.active ,[caseLine.color]: true, 'not-visible': !caseLine.visible, ['ligne-'+caseLine.indexLigne]: true, 'soluce': caseLine.soluce, 'hover-case': caseLine.visible}"
+        @click="activeCase(caseLine)" :id="'case-'+caseLine.indexLigne+'-'+caseLine.indexColonne">
         {{ caseLine.number }}
         <svg 
         v-if="!caseLine.visible && caseLine.item==='lamp'"
@@ -292,13 +292,12 @@ const removingLine=(item:Case) : boolean =>{
 }
 
 const activeCase = (item : Case) : void => {
+  const possibilityCase = [possibility.value?.left, possibility.value?.right, possibility.value?.top, possibility.value?.bottom]
+  
   if(caseSelected1.value){
-    if(possibility.value?.left === item 
-      || possibility.value?.right === item
-      || possibility.value?.top === item
-      || possibility.value?.bottom === item
-      ){
-        if(caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number){
+    const itemIsInPossibility : number = possibilityCase.indexOf(item);
+    
+      if(itemIsInPossibility !== -1 && (caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number)){
             caseSelected1.value.visible = false;
             item.visible = false;
             playAudio('pop');
@@ -313,38 +312,26 @@ const activeCase = (item : Case) : void => {
               lampSoluces.value= []
 
             }
+            caseSelected1.value.active = false;
+            item.active = false;
+            possibility.value = null;
             const suppressLine1 : boolean = removingLine(caseSelected1.value);
+
             if(caseSelected1.value.indexLigne !== item.indexLigne){
               setTimeout(function () {
               removingLine(item);
-            },suppressLine1? 203 : 0)
+              },suppressLine1? 203 : 0)
             }
-          
-           
+            caseSelected1.value = null;
+            save();
+        }else{
+          caseSelected1.value.active = false;
+          item.active = false;
+          possibility.value = null;
+          caseSelected1.value = item;
+          caseSelected1.value.active = true;
+          allNearCase(caseSelected1.value);
         }
-      }
-        caseSelected1.value.active = false;
-        item.active = false;
-        if(possibility.value){
-          if(possibility.value.bottom){
-            possibility.value.bottom.proposal=false;
-          }
-          
-          if(possibility.value.top){
-            possibility.value.top.proposal=false;
-          }
-
-          if(possibility.value.left){
-            possibility.value.left.proposal=false;
-          }
-          if(possibility.value.right){
-            possibility.value.right.proposal=false;
-          }
-        }
-
-        possibility.value = null;
-        caseSelected1.value = null;
-        save();
   }else{
     if(item.visible){
       item.active = true
@@ -446,6 +433,7 @@ const useLamp = () => {
 
       if(isSoluceFind){
         lamp.value -= 1
+        window.location.href = `#case-${lampSoluces.value[1].indexLigne}-${lampSoluces.value[1].indexColonne}`;
         save()
         break
       }

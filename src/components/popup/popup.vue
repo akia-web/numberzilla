@@ -9,10 +9,10 @@
                 </svg>
             </header>
             <main>
-            <p> Voulez-vous vraiment recommencer votre partie ?
-                <br>
-                Vous ne perdrez pas vos points
-            </p>
+                <p> Voulez-vous vraiment recommencer votre partie ?
+                    <br> <br>
+                    Vous ne perdrez pas vos points
+                </p>
             </main>
             <footer>
                 <button @click="choice('non')">Non</button>

@@ -2,7 +2,6 @@ span{
     font-size: 2em;
     border: 1px solid rgb(56, 37, 100);
     font-family: 'Pacifico', cursive;
-    cursor: pointer;
     display: block;
     width: calc(100% / 10);
     position: relative;
@@ -27,9 +26,11 @@ span{
     max-width: 420px;
     margin: 0 auto;
 }
-span:hover{
-    color : rgb(113, 113, 179)
+.hover-case:hover{
+    color : rgb(113, 113, 179);
+    cursor: pointer;
 }
+
 
 .active{
     background-color: aqua 
