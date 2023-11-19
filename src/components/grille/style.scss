@@ -1,17 +1,34 @@
-*{
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-}
 span{
-    padding: 0 8px;
     font-size: 2em;
-    border: 1px solid #554949;
+    border: 1px solid rgb(56, 37, 100);
+    font-family: 'Pacifico', cursive;
     cursor: pointer;
+    display: block;
+    width: calc(100% / 10);
+    position: relative;
 }
 
+.item{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    fill: yellow;
+    width: 30px;
+    height: 30px;
+    
+}
+
+.soluce{
+    background-color: rgb(230, 163, 173)
+}
+.container-ligne{
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+}
 span:hover{
-    background-color: aqua;
+    color : rgb(113, 113, 179)
 }
 
 .active{
@@ -19,9 +36,13 @@ span:hover{
 }
 
 .main{
-    width: 60%;
-    margin: 3em 0;
+    width: 90%;
+    margin: 3em 0 13vh 0;
     text-align: center;
+    
+    @media (min-width: 1024px) {
+        width: 60%;
+    }
 }
 
 .proposal{
@@ -29,15 +50,17 @@ span:hover{
     border: 1px dotted #ffffff;
 }
 
-.container{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
 .left-right{
     width: 35%;
     position: relative;
+}
+
+.left-right:first-child{
+    display: none;
+    @media (min-width: 1024px) {
+        display: block;
+    }
+    
 }
 
 h1{

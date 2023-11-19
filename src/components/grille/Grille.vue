@@ -1,22 +1,29 @@
 <template>
 
-  <div class="container">
+  <div class="display-flex row-to-column justify-center align-item-center">
     <div class="left-right"></div>
     <div class="main">
-    <div v-for="(item, index) in game" :key="index" class="bidule" :id="'ligne-'+index">
+    <div v-for="(item, index) in game" :key="index" class="container-ligne display-flex" :id="'ligne-'+index">
       <!-- 'proposal': bidule.proposal -->
       <span 
         v-for="caseLine in item" 
-        :class="{'active': caseLine!.active ,[caseLine.color]: true, 'not-visible': !caseLine!.visible, ['ligne-'+caseLine.indexLigne]: true}"
-        @click="activeCase(caseLine)">{{ caseLine!.number }}</span>
+        :key="caseLine.indexColonne"
+        :class="{'active': caseLine.active ,[caseLine.color]: true, 'not-visible': !caseLine.visible, ['ligne-'+caseLine.indexLigne]: true, 'soluce': caseLine.soluce}"
+        @click="activeCase(caseLine)">
+        {{ caseLine.number }}
+        <svg 
+        v-if="!caseLine.visible && caseLine.item==='lamp'"
+        @click="getItem(caseLine)" 
+        class="item" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24"><path d="M13 24h-2c-.288 0-.563-.125-.753-.341l-.576-.659h4.658l-.576.659c-.19.216-.465.341-.753.341zm1.867-3c.287 0 .52.224.52.5s-.233.5-.52.5h-5.734c-.287 0-.52-.224-.52-.5s.233-.5.52-.5h5.734zm-2.871-17c2.983 0 6.004 1.97 6.004 5.734 0 1.937-.97 3.622-1.907 5.252-.907 1.574-1.843 3.201-1.844 5.014h1.001c0-3.286 3.75-6.103 3.75-10.266 0-4.34-3.502-6.734-7.004-6.734-3.498 0-6.996 2.391-6.996 6.734 0 4.163 3.75 6.98 3.75 10.266h.999c.001-1.813-.936-3.44-1.841-5.014-.938-1.63-1.908-3.315-1.908-5.252 0-3.764 3.017-5.734 5.996-5.734zm9.428 7.958c.251.114.362.411.248.662-.114.251-.41.363-.662.249l-.91-.414c-.252-.114-.363-.41-.249-.662.114-.251.411-.362.662-.248l.911.413zm-18.848 0c-.251.114-.362.411-.248.662.114.251.41.363.662.249l.91-.414c.252-.114.363-.41.249-.662-.114-.251-.411-.362-.662-.248l-.911.413zm18.924-2.958h-1c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h1c.276 0 .5.224.5.5s-.224.5-.5.5zm-18-1c.276 0 .5.224.5.5s-.224.5-.5.5h-1c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h1zm16.818-3.089c.227-.158.284-.469.126-.696-.157-.227-.469-.283-.696-.126l-.821.57c-.227.158-.283.469-.126.696.157.227.469.283.696.126l.821-.57zm-16.636 0c-.227-.158-.284-.469-.126-.696.157-.227.469-.283.696-.126l.821.57c.227.158.283.469.126.696-.157.227-.469.283-.696.126l-.821-.57zm13.333-3.033c.134-.241.048-.546-.193-.68-.241-.135-.546-.048-.68.192l-.488.873c-.135.241-.048.546.192.681.241.134.546.048.681-.193l.488-.873zm-10.03 0c-.134-.241-.048-.546.193-.68.241-.135.546-.048.68.192l.488.873c.135.241.048.546-.192.681-.241.134-.546.048-.681-.193l-.488-.873zm5.515-1.378c0-.276-.224-.5-.5-.5s-.5.224-.5.5v1c0 .276.224.5.5.5s.5-.224.5-.5v-1z"/></svg>
+      </span>
+ 
     </div>
   </div>
     <div class="left-right">
-      <Action @open-popup="handleOpenPopup" @addLine="handleAddLine" :score="score"/>
+      <Action @open-popup="handleOpenPopup" @addLine="handleAddLine"  @useLamp="useLamp" :score="score" :lamp="lamp"/>
     </div>
     <Popup v-if="openPopup" @choice="handlePopupChoice"/>
   </div>
- 
 </template>
 
 <script setup lang="ts">
@@ -26,34 +33,36 @@ import {NearCase} from "@/types/nearCase"
 import {GameRecord} from "@/types/gameRecord"
 import Action from '@/components/actions/Actions.vue'
 import Popup from '@/components/popup/popup.vue'
-const recordGame = ref<GameRecord>({game:null, score:null})
-const game = ref<Case[][]>([])
+const recordGame = ref<GameRecord>({game:null, score:null, lamp: null, lampSoluces: []});
+const game = ref<Case[][]>([]);
 const caseSelected1 = ref<Case | null>(null);
-let possibility = ref<NearCase|null>(null)
-let score = ref<number>(0)
-let lastSelectedColor = ref<string>('white')
+let possibility = ref<NearCase|null>(null);
+let score = ref<number>(0);
+let lamp = ref<number>(0);
+let lastSelectedColor = ref<string>('white');
 let openPopup = ref<boolean>(false);
+let lampSoluces = ref<Case[]>([])
 
-const color: string[] = ['blue', 'pink', 'green', 'yellow', 'white']
+const color: string[] = ['blue', 'pink', 'green', 'yellow', 'white'];
 
-const createGame = (colonne: number, ligne: number) =>{
-  game.value =  getColonne(colonne, ligne, color[4])
-  console.log(game.value)
-  lastSelectedColor.value = color[4]
+const createGame = (colonne: number, ligne: number) : void => {
+  game.value =  getColonne(colonne, ligne, color[4]);
+  lastSelectedColor.value = color[4];
+  save()
 }
 
-const getColonne= (colonne: number, ligne: number, color: string): Case[][]=>{
-  let result: Case[][] = []
-  for (let i = 0; i< ligne; i++){
-   result.push( getLine(colonne, i, color));
+const getColonne = (colonne: number, ligne: number, color: string) : Case[][] =>{
+  let result: Case[][] = [];
+  for (let i : number = 0; i< ligne; i++){
+   result.push(getLine(colonne, i, color));
   }
-  return result
+  return result;
 }
 
 const getLine = (number:number, ligne: number, color:string) : Case[]=>{
-  let result: Case[] = []
-  for(let i = 0; i<number; i++){
-    const lala : Case | null = 
+  let result: Case[] = [];
+  for(let i: number = 0; i<number; i++){
+    const caseTableau : Case = 
     {
       indexColonne : i,
       indexLigne : ligne,
@@ -62,108 +71,116 @@ const getLine = (number:number, ligne: number, color:string) : Case[]=>{
       active: false,
       visible: true,
       proposal: false,
-      color: color
-    }
-    result.push(lala)
+      color: color,
+      item: determineBonus(),
+      soluce: false
+    };
+    result.push(caseTableau);
   }
-  return result
+  return result;
 }
 
-const allNearCase=(item: Case)=>{
+const determineBonus = () : string =>{
+  const randomValue = Math.random();
+
+  return randomValue < 0.98 ? 'none' : 'lamp';
+}
+
+const getItem = (item: Case) : void => {
+  if(item.item === 'lamp'){
+    lamp.value += 1
+  }
+  item.item = 'none';
+  save()
+}
+
+const allNearCase= (item: Case) : void=>{
   let result : NearCase = {};
-  let rightFind = false
-  let bottomFind = false
-  let leftFind = false
-  let topFind = false
-  console.log('start right')
+  result.right = findRightCase(item);
+  result.left = findLeftCase(item);
+  result.top = findTopCase(item);
+  result.bottom = findbottomCase(item)
+  possibility.value = result;
+}
 
+const findRightCase = (item : Case) : Case | undefined => {
   // calcule right
-  let caseTableau = item.indexColonne+1
-  let ligne = item.indexLigne
-  console.log('ligne: '+ ligne)
-  console.log('longueur Tableau:  '+ game.value.length)
-  let parcourt = 0
-  while(!rightFind || parcourt === 2){
-    
-    if(caseTableau ===10 && ligne === game.value.length - 1){
-      console.log('coucou')
-      parcourt = 1
-      caseTableau = 0
-      ligne = 0
-    }else if(caseTableau ===10 && ligne < game.value.length){
-      caseTableau = 0
-      ligne += 1
-    }
-  
+  let rightFind = false;
+  let caseTableau = item.indexColonne+1;
+  let ligne = item.indexLigne;
+  let result : Case | undefined;
+  let parcourt = 0;
+
+  while(!rightFind){
     if(caseTableau === 10 && ligne === game.value.length - 1 && parcourt === 0){
-      parcourt = 1
-    }
-    if(caseTableau === 10 && ligne === game.value.length - 1 && parcourt === 1){
-      parcourt = 2
-      break
+      parcourt = 1;
+      caseTableau = 0;
+      ligne = 0;
+    }else if(caseTableau === 10 && ligne < game.value.length){
+      caseTableau = 0;
+      ligne += 1;
     }
 
-    for(let i = caseTableau; i < game.value[ligne].length; i++){
-      console.log('gnia')
+    if(caseTableau === 10 && ligne === game.value.length - 1 && parcourt === 1){
+      result = undefined;
+      break;
+    }
+
+    for(let i : number = caseTableau; i < game.value[ligne].length; i++){
       if(game.value[ligne][i].visible===true){
-        result.right = game.value[ligne][i];
-        result.right.proposal = true
-        rightFind = true
+        result = game.value[ligne][i];
+        result.proposal = true;
+        rightFind = true;
         break
       }
     }
-    caseTableau = 0
+
+    caseTableau = 0;
     if(ligne + 1 >= game.value.length){
-      ligne = 0
+      ligne = 0;
     }else{
-      ligne += 1
+      ligne += 1;
     }
     
-
   }
-  console.log('end right')
-
-  // calcul left
-  console.log('start left')
-   caseTableau = item.indexColonne-1
-   ligne = item.indexLigne
-   parcourt = 0
+  return result;
   
-   while(!leftFind || parcourt === 2){
-    console.log('start case' + caseTableau)
-    console.log('start ligne' + ligne)
+}
+
+const findLeftCase = (item : Case) : Case | undefined => {
+   let caseTableau = item.indexColonne-1;
+   let ligne = item.indexLigne;
+   let parcourt = 0;
+   let leftFind = false;
+   let result : Case | undefined;
+  
+   while(!leftFind){
     if(caseTableau === -1 && ligne === 0){
-      caseTableau = 9
-      ligne = game.value.length - 1
-    }else if(caseTableau ===0 && ligne === 0){
-      parcourt = 1
-      caseTableau = 9
-      ligne = game.value.length - 1
+      caseTableau = 9;
+      ligne = game.value.length - 1;
+    }else if(caseTableau === 0 && ligne === 0 && parcourt === 0){
+      parcourt = 1;
+      caseTableau = 9;
+      ligne = game.value.length - 1;
 
     }
-    else if(caseTableau ===-1 && ligne >= 0 && ligne <= 9){
-      caseTableau = 9
-      ligne -= 1
+    // else if(caseTableau ===-1 && ligne >= 0 && ligne <= 9){
+    //   caseTableau = 9;
+    //   ligne -= 1;
 
-    }
-
-    if(caseTableau === 0 && ligne === 0 && parcourt === 0){
-      parcourt = 1
-    }
+    // }
     if(caseTableau === 0 && ligne === 0 && parcourt === 1){
-      parcourt = 2
-      result.left = undefined
+      result = undefined
       break
     }
     for(let i = caseTableau; i >= 0; i--){
       if(game.value[ligne][i].visible===true){
-        result.left = game.value[ligne][i]
-        result.left.proposal = true
+        result = game.value[ligne][i]
+        result.proposal = true
         leftFind = true
         break
       }
     }
-    console.log('fin for')
     caseTableau = 9
     if(ligne === 0){
       ligne = game.value.length-1
@@ -173,98 +190,108 @@ const allNearCase=(item: Case)=>{
     
 
   }
-  console.log('end left')
+  return result;
+  
+}
 
-  // calcul top
-  console.log('start top')
-  caseTableau = item.indexColonne
-  ligne = item.indexLigne - 1
+const findTopCase = (item : Case) : Case | undefined => {
+  let caseTableau = item.indexColonne
+  let ligne = item.indexLigne - 1
+  let topFind = false;
+  let result : Case | undefined;
+  
+
   while(!topFind){
     if(ligne === -1){
-      result.top = undefined
+      result = undefined
       topFind = true
       break
     }
     for(let i = ligne; i >= 0; i--){
       if(game.value[i][caseTableau].visible===true){
         // result.left = game.value[ligne][i]
-        result.top = game.value[i][caseTableau]
-        result.top.proposal = true
+        result = game.value[i][caseTableau]
+        result.proposal = true
         topFind = true
         break
       }
     }
-    if(ligne === 0 && !result.top){
-      result.top = undefined
+    if(ligne === 0 && !result){
+      result = undefined
       topFind = true
     }else{
       ligne -= 1
     }
   }
-  console.log('end top')
-  // calcul botom
-  console.log('start bottom')
-  caseTableau = item.indexColonne
-  ligne = item.indexLigne + 1
+  return result
+  
+}
+
+const findbottomCase = (item : Case) : Case | undefined => {
+  let caseTableau = item.indexColonne
+  let ligne = item.indexLigne + 1
+  let result : Case | undefined;
+  let bottomFind = false;
   while(!bottomFind){
     if(ligne === game.value.length){
-      result.bottom = undefined
+      result = undefined
       bottomFind = true
       break
     }
     for(let i = ligne; i < game.value.length; i++){
         if(game.value[i][caseTableau].visible===true){
-          result.bottom = game.value[i][caseTableau]
+          result = game.value[i][caseTableau]
           bottomFind = true
-          result.bottom.proposal = true
+          result.proposal = true
           break
         }
     }
-      if(ligne === game.value.length - 1 && !result.bottom){
-      result.bottom = undefined
+      if(ligne === game.value.length - 1 && !result){
+      result = undefined
       bottomFind = true
       }else{
       ligne += 1
     }
   }
- 
-  
-  console.log('end bottom')
-  console.log(result)
-  possibility.value = result
+  return result
 }
 
-const removingLine=(item:Case)=>{
-  const line = document.querySelector(`#ligne-${item.indexLigne}`)
-  let deleteLine1 : boolean = true
+const removingLine=(item:Case) : boolean =>{
+  const line : Element | null = document.querySelector(`#ligne-${item.indexLigne}`);
+  let deleteLine : boolean = true;
+  let lampNotCollected = 0
   game.value[item.indexLigne].forEach((e)=>{
+    if(e.item === 'lamp'){
+      lampNotCollected += 1;
+    }
     if(e.visible){
-      deleteLine1 = false
+      deleteLine = false;
     }
   })
-  if(deleteLine1){
-    line?.classList.add('removeLine')
+  if(deleteLine){
+    lamp.value += lampNotCollected;
+    line?.classList.add('removeLine');
     setTimeout(function () {
-      playAudio('removeline')
-      game.value.splice(item.indexLigne,1)
+      playAudio('removeline');
+      game.value.splice(item.indexLigne,1);
 
       for(let i=0; i<game.value.length;i++){
         game.value[i].forEach(e=>{
-          e.indexLigne = i
+          e.indexLigne = i;
         })
       }
-      score.value += 100
+      score.value += 100;
       save()
     }, 200 )
     setTimeout(function () {
-    line?.classList.remove('removeLine')
+    line?.classList.remove('removeLine');
   }, 201 )
   
   }
-  return deleteLine1;
+  return deleteLine;
 }
 
-const activeCase = (item : Case) => {
+const activeCase = (item : Case) : void => {
   if(caseSelected1.value){
     if(possibility.value?.left === item 
       || possibility.value?.right === item
@@ -272,44 +299,52 @@ const activeCase = (item : Case) => {
       || possibility.value?.bottom === item
       ){
         if(caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number){
-            caseSelected1.value.visible = false
-            item.visible = false
-            playAudio('pop')
-            if(caseSelected1.value.number + item.number === 10){
-              score.value += 10
-            }else{
-              score.value += 5
-            }
-            const suppressLine1 = removingLine(caseSelected1.value)
+            caseSelected1.value.visible = false;
+            item.visible = false;
+            playAudio('pop');
+            score.value += caseSelected1.value.number + item.number === 10 ?  10 : 5;
 
-            setTimeout(function () {
-              removingLine(item)
+            if(item.soluce || caseSelected1.value.soluce){
+              item.soluce = false
+              caseSelected1.value.soluce = false;
+              lampSoluces.value.forEach(e=>{
+                game.value[e.indexLigne][e.indexColonne].soluce = false
+              })
+              lampSoluces.value= []
+
+            }
+            const suppressLine1 : boolean = removingLine(caseSelected1.value);
+            if(caseSelected1.value.indexLigne !== item.indexLigne){
+              setTimeout(function () {
+              removingLine(item);
             },suppressLine1? 203 : 0)
+            }
+          
            
         }
       }
-        caseSelected1.value.active = false
-        item.active = false
+        caseSelected1.value.active = false;
+        item.active = false;
         if(possibility.value){
           if(possibility.value.bottom){
-            possibility.value.bottom.proposal=false
+            possibility.value.bottom.proposal=false;
           }
           
           if(possibility.value.top){
-            possibility.value.top.proposal=false
+            possibility.value.top.proposal=false;
           }
 
           if(possibility.value.left){
-            possibility.value.left.proposal=false
+            possibility.value.left.proposal=false;
           }
           if(possibility.value.right){
-            possibility.value.right.proposal=false
+            possibility.value.right.proposal=false;
           }
         }
 
-        possibility.value = null
-        caseSelected1.value = null
-        save()
+        possibility.value = null;
+        caseSelected1.value = null;
+        save();
   }else{
     if(item.visible){
       item.active = true
@@ -321,7 +356,7 @@ const activeCase = (item : Case) => {
   }
 }
 
- const playAudio = async (name:string) => {
+const playAudio = async (name:string) : Promise<void> => {
   const audioContext = new (window.AudioContext)();
 
   try {
@@ -346,67 +381,171 @@ const activeCase = (item : Case) => {
   }
 };
 
-const handleOpenPopup = () => {
+const handleOpenPopup = () : void => {
   openPopup.value = true;
-  console.log('popup')
-  // createGame(10,7)
-  // save()
 }
-const handleAddLine = () => {
-  let indexColor = Math.floor(Math.random() * (4 - 1 + 1)) + 1
+
+const handleAddLine = () : void => {
+  let indexColor : number = Math.floor(Math.random() * (4 - 1 + 1)) + 1;
 
   while(indexColor === color.indexOf(lastSelectedColor.value)){
     indexColor = Math.floor(Math.random() * (4 - 1 + 1)) + 1;
   }
-  lastSelectedColor.value = color[indexColor]
-  console.log(indexColor)
-  const truc = getColonne(10, game.value.length, color[indexColor])
-  console.log(truc)
-  truc.forEach(e=>{
-    game.value.push(e)
+
+  lastSelectedColor.value = color[indexColor];
+  const newLine : Case[][] = getColonne(10, game.value.length, color[indexColor]);
+
+  newLine.forEach(e=>{
+    game.value.push(e);
     
   })
-  playAudio('plic')
-  for(let i = 0; i<game.value.length; i++){
+
+  playAudio('plic');
+
+  for(let i: number = 0; i < game.value.length; i++){
     game.value[i].forEach(e=>{
-      e.indexLigne = i
+      e.indexLigne = i;
     })
   }
-  save()
+  save();
 }
 
-const handlePopupChoice = (e:any) => {
+const handlePopupChoice = (e:string) :void => {
   if(e === 'oui'){
-      createGame(10,7)
-      save()
+      createGame(10,7);
+      lampSoluces.value = []
+      save();
   }
-  openPopup.value = false
+  openPopup.value = false;
 }
 
-const save = () => {
+const save = () : void => {
   recordGame.value.game = game.value;
-  recordGame.value.score = score.value
-  console.log(recordGame)
+  recordGame.value.score = score.value;
+  recordGame.value.lamp = lamp.value;
+  recordGame.value.lampSoluces = lampSoluces.value
   const objetTransformer = JSON.stringify(recordGame);
-  localStorage.setItem('numberzilla', objetTransformer)
-
+  localStorage.setItem('numberzilla', objetTransformer);
 }
+
+const useLamp = () => {
+  if(lamp.value>0){
+    let caseGame = 0;
+    let ligne = 0
+    let parcourtSoluce = 0;
+    let findSoluce = false;
+
+    while(!findSoluce){
+      let item = getNextCase(game.value[ligne][caseGame])
+      if(item === undefined){
+        break
+      }
+
+      allNearCase (item!);
+      const isSoluceFind : Boolean = getSoluce(item!)
+
+      if(isSoluceFind){
+        lamp.value -= 1
+        save()
+        break
+      }
+
+      caseGame += 1
+
+      if(caseGame === 10){
+        caseGame = 0
+        ligne += 1
+      }
+      if(ligne === game.value.length){
+        ligne = 0
+      }
+
+      if(caseGame === 9 && ligne === game.value.length -1){
+        parcourtSoluce += 1
+      }
+
+      if(parcourtSoluce === 2){
+        break
+      }
+    }
+  }
+  
+}
+
+const getNextCase = (item : Case | undefined ) => {
+  let findItem = false
+  let ligne = item!.indexLigne;
+  let column = item!.indexColonne
+  while(!findItem){
+    if(ligne === game.value.length){
+      return item = undefined
+    }
+    item = game.value[ligne][column] 
+    if (item && item.visible){
+      return item
+    }
+
+    column += 1
+
+    if(column === 10){
+      column = 0
+      ligne += 1
+    }
+    if(ligne === game.value.length){
+      ligne = 0
+    }
+
+    if(column === 0 && ligne === 0){
+      return item = undefined
+    }
+  }
+}
+
+const getSoluce = ( item : Case ) => {
+  let response : boolean = false;
+  if(possibility.value?.right && (possibility.value?.right?.number === item.number ||  possibility.value!.right!.number + item.number === 10)){
+      lampSoluces.value = []
+      item.soluce = true
+      possibility.value!.right!.soluce = true
+      lampSoluces.value.push(item)
+      lampSoluces.value.push(possibility.value!.right!)
+      return response = true
+  }
+  
+  if(possibility.value?.top && (possibility.value?.top?.number === item.number ||  possibility.value!.top!.number + item.number === 10)){
+      lampSoluces.value = []
+      item.soluce = true
+      possibility.value!.top!.soluce = true
+      lampSoluces.value?.push(item)
+      lampSoluces.value?.push(possibility.value!.top!)
+      return response = true
+  }
+
+
+  return response 
+}
+
 onMounted(() => {
-    const getLocalStorage = localStorage.getItem('numberzilla')
+    const getLocalStorage = localStorage.getItem('numberzilla');
+
     if(getLocalStorage){
-      let object = JSON.parse(getLocalStorage)
-      game.value = object._value.game
-      score.value = object._value.score
-      const tailleTableau = game.value.length-1
-      lastSelectedColor.value = game.value[tailleTableau][9].color
+      const gameParse = JSON.parse(getLocalStorage);
+      game.value = gameParse._value.game;
+      score.value = gameParse._value.score;
+      lamp.value = gameParse._value.lamp;
+      lampSoluces.value = gameParse._value.lampSoluces
+      const tailleTableau = game.value.length-1;
+      lastSelectedColor.value = game.value[tailleTableau][9].color;
     }
     else{
-      createGame(10,7)
+      createGame(10,7);
+      score.value = 0;
+      lamp.value = 0;
+      lampSoluces.value = []
     }
     
 })
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped src="./style.scss" lang="scss">
 </style>

@@ -5,5 +5,7 @@ export interface Case {
     active: boolean,
     visible: boolean,
     proposal : boolean,
-    color: string
+    color: string,
+    item: string,
+    soluce: boolean
 }
