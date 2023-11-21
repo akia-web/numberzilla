@@ -30,15 +30,29 @@ svg{
     transition: 0.2s ease-in-out;
     cursor: pointer;
 }
-
 svg:hover{
     fill: #ff35a0
 }
 
+.icone-disabled{
+    fill: lightgray;
+    cursor:not-allowed;
+}
+
+.icone-disabled:hover{
+    fill: lightgray; 
+}
+
+.small-svg{
+    width: 20px;
+}
+
+
+
 h1{
     color: white;
     font-size: 16px;
-    margin-bottom: 1em;
+    margin-left: 10px;
     @media (min-width: 1024px) {
         font-size: 20px;
     }

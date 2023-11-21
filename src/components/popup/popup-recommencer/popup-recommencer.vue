@@ -30,4 +30,4 @@
     }
 </script>
 
-<style scoped src="./style.scss" lang="scss"></style>
+<style scoped src="../style.scss" lang="scss"></style>

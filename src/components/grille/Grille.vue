@@ -1,7 +1,8 @@
 <template>
 
   <div class="display-flex row-to-column justify-center align-item-center">
-    <div class="left-right"></div>
+    <div class="left-right">
+    </div>
     <div class="main">
     <div v-for="(item, index) in game" :key="index" class="container-ligne display-flex" :id="'ligne-'+index">
       <!-- 'proposal': bidule.proposal -->
@@ -20,9 +21,27 @@
     </div>
   </div>
     <div class="left-right">
-      <Action @open-popup="handleOpenPopup" @addLine="handleAddLine"  @useLamp="useLamp" :score="score" :lamp="lamp"/>
+      <Action 
+        @open-popup-recommencer="handleOpenPopupRecommencer" 
+        @open-popup-options="handleOpenPopupOptions" 
+        @addLine="handleAddLine"  
+        @useLamp="useLamp" 
+        :score="score" 
+        :lamp="lamp"
+        :can-use-lamp="canUseLamp"
+      />
     </div>
-    <Popup v-if="openPopup" @choice="handlePopupChoice"/>
+    <PopupRecommencer 
+      v-if="openPopupRecommencer" 
+      @choice="handlePopupRecommencerChoice"
+    />
+
+    <PopupOptions 
+      v-if="openPopupOptions" 
+      @options-jeu="handlePopupOptionsChoice"
+      :soundValue="Number(soundValue)"
+    />
+
   </div>
 </template>
 
@@ -32,16 +51,20 @@ import {Case} from "@/types/case"
 import {NearCase} from "@/types/nearCase"
 import {GameRecord} from "@/types/gameRecord"
 import Action from '@/components/actions/Actions.vue'
-import Popup from '@/components/popup/popup.vue'
-const recordGame = ref<GameRecord>({game:null, score:null, lamp: null, lampSoluces: []});
+import PopupRecommencer from '@/components/popup/popup-recommencer/popup-recommencer.vue'
+import PopupOptions from '@/components/popup/popup-son/popup-options.vue'
+const recordGame = ref<GameRecord>({game:null, score:null, lamp: null, lampSoluces: [], sound: 0.5});
 const game = ref<Case[][]>([]);
 const caseSelected1 = ref<Case | null>(null);
 let possibility = ref<NearCase|null>(null);
 let score = ref<number>(0);
 let lamp = ref<number>(0);
 let lastSelectedColor = ref<string>('white');
-let openPopup = ref<boolean>(false);
+let openPopupRecommencer = ref<boolean>(false);
+let openPopupOptions = ref<boolean>(false);
+let soundValue = ref<number>(0.5)
 let lampSoluces = ref<Case[]>([])
+let canUseLamp = ref<boolean>(true)
 
 const color: string[] = ['blue', 'pink', 'green', 'yellow', 'white'];
 
@@ -88,6 +111,7 @@ const determineBonus = () : string =>{
 
 const getItem = (item: Case) : void => {
   if(item.item === 'lamp'){
+    playAudio('getBonus')
     lamp.value += 1
   }
   item.item = 'none';
@@ -269,10 +293,10 @@ const removingLine=(item:Case) : boolean =>{
     }
   })
   if(deleteLine){
+    playAudio('removeline');
     lamp.value += lampNotCollected;
     line?.classList.add('removeLine');
     setTimeout(function () {
-      playAudio('removeline');
       game.value.splice(item.indexLigne,1);
 
       for(let i=0; i<game.value.length;i++){
@@ -298,44 +322,51 @@ const activeCase = (item : Case) : void => {
     const itemIsInPossibility : number = possibilityCase.indexOf(item);
     
       if(itemIsInPossibility !== -1 && (caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number)){
-            caseSelected1.value.visible = false;
-            item.visible = false;
-            playAudio('pop');
-            score.value += caseSelected1.value.number + item.number === 10 ?  10 : 5;
+        playAudio('pop');    
+        caseSelected1.value.visible = false;
+          item.visible = false;
+          
+          score.value += caseSelected1.value.number + item.number === 10 ?  10 : 5;
 
-            if(item.soluce || caseSelected1.value.soluce){
-              item.soluce = false
-              caseSelected1.value.soluce = false;
-              lampSoluces.value.forEach(e=>{
-                game.value[e.indexLigne][e.indexColonne].soluce = false
-              })
-              lampSoluces.value= []
+          if(item.soluce || caseSelected1.value.soluce){
+            item.soluce = false
+            caseSelected1.value.soluce = false;
+            lampSoluces.value.forEach(e=>{
+              game.value[e.indexLigne][e.indexColonne].soluce = false
+            })
+            lampSoluces.value= []
+            canUseLamp.value = true 
 
-            }
-            caseSelected1.value.active = false;
-            item.active = false;
-            possibility.value = null;
-            const suppressLine1 : boolean = removingLine(caseSelected1.value);
-
-            if(caseSelected1.value.indexLigne !== item.indexLigne){
-              setTimeout(function () {
-              removingLine(item);
-              },suppressLine1? 203 : 0)
-            }
-            caseSelected1.value = null;
-            save();
-        }else{
+          }
           caseSelected1.value.active = false;
           item.active = false;
           possibility.value = null;
-          caseSelected1.value = item;
-          caseSelected1.value.active = true;
-          allNearCase(caseSelected1.value);
+          const suppressLine1 : boolean = removingLine(caseSelected1.value);
+
+          if(caseSelected1.value.indexLigne !== item.indexLigne){
+            setTimeout(function () {
+            removingLine(item);
+            },suppressLine1? 203 : 0)
+          }
+          caseSelected1.value = null;
+          save();
+        }else{
+          if(item.visible){
+            playAudio('select')
+            caseSelected1.value.active = false;
+            item.active = false;
+            possibility.value = null;
+            caseSelected1.value = item;
+            caseSelected1.value.active = true;
+            allNearCase(caseSelected1.value);
+          }
+        
         }
   }else{
     if(item.visible){
       item.active = true
       if(!caseSelected1.value){
+        playAudio('select')
         allNearCase(item);
         caseSelected1.value = item
       }
@@ -352,7 +383,7 @@ const playAudio = async (name:string) : Promise<void> => {
     const buffer = await audioContext.decodeAudioData(data);
 
     const gainNode = audioContext.createGain();
-    gainNode.gain.value = 0.2;
+    gainNode.gain.value = soundValue.value;
 
     const audioElement = audioContext.createBufferSource();
     audioElement.buffer = buffer;
@@ -368,8 +399,19 @@ const playAudio = async (name:string) : Promise<void> => {
   }
 };
 
-const handleOpenPopup = () : void => {
-  openPopup.value = true;
+const handleOpenPopupRecommencer = () : void => {
+  openPopupRecommencer.value = true;
+}
+
+const handleOpenPopupOptions = () : void => {
+  openPopupOptions.value = true
+}
+
+const handlePopupOptionsChoice = (e:number): void => {
+  openPopupOptions.value = false
+  soundValue.value = e
+  save()
+  console.log(soundValue.value)
 }
 
 const handleAddLine = () : void => {
@@ -397,20 +439,22 @@ const handleAddLine = () : void => {
   save();
 }
 
-const handlePopupChoice = (e:string) :void => {
+const handlePopupRecommencerChoice = (e:string) :void => {
   if(e === 'oui'){
       createGame(10,7);
       lampSoluces.value = []
       save();
   }
-  openPopup.value = false;
+  openPopupRecommencer.value = false;
 }
+
 
 const save = () : void => {
   recordGame.value.game = game.value;
   recordGame.value.score = score.value;
   recordGame.value.lamp = lamp.value;
-  recordGame.value.lampSoluces = lampSoluces.value
+  recordGame.value.lampSoluces = lampSoluces.value;
+  recordGame.value.sound = soundValue.value;
   const objetTransformer = JSON.stringify(recordGame);
   localStorage.setItem('numberzilla', objetTransformer);
 }
@@ -425,6 +469,7 @@ const useLamp = () => {
     while(!findSoluce){
       let item = getNextCase(game.value[ligne][caseGame])
       if(item === undefined){
+        playAudio('negative')
         break
       }
 
@@ -432,8 +477,10 @@ const useLamp = () => {
       const isSoluceFind : Boolean = getSoluce(item!)
 
       if(isSoluceFind){
+        playAudio('selectLamp')
         lamp.value -= 1
         window.location.href = `#case-${lampSoluces.value[1].indexLigne}-${lampSoluces.value[1].indexColonne}`;
+        canUseLamp.value = false;
         save()
         break
       }
@@ -453,6 +500,7 @@ const useLamp = () => {
       }
 
       if(parcourtSoluce === 2){
+        playAudio('negative')
         break
       }
     }
@@ -522,14 +570,18 @@ onMounted(() => {
       score.value = gameParse._value.score;
       lamp.value = gameParse._value.lamp;
       lampSoluces.value = gameParse._value.lampSoluces
+      soundValue.value = gameParse._value.sound
       const tailleTableau = game.value.length-1;
       lastSelectedColor.value = game.value[tailleTableau][9].color;
+      canUseLamp.value = lampSoluces.value.length > 0? false : true;
+      console.log(game.value.length)
     }
     else{
       createGame(10,7);
       score.value = 0;
       lamp.value = 0;
       lampSoluces.value = []
+      soundValue.value = 0.5
     }
     
 })
