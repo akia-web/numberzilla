@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import {Case} from "@/types/case"
 import {NearCase} from "@/types/nearCase"
 import {GameRecord} from "@/types/gameRecord"
@@ -62,9 +62,10 @@ let lamp = ref<number>(0);
 let lastSelectedColor = ref<string>('white');
 let openPopupRecommencer = ref<boolean>(false);
 let openPopupOptions = ref<boolean>(false);
-let soundValue = ref<number>(0.5)
-let lampSoluces = ref<Case[]>([])
-let canUseLamp = ref<boolean>(true)
+let soundValue = ref<number>(0.5);
+let lampSoluces = ref<Case[]>([]);
+let canUseLamp = ref<boolean>(true);
+const maxLine : number = 1000;
 
 const color: string[] = ['blue', 'pink', 'green', 'yellow', 'white'];
 
@@ -106,7 +107,7 @@ const getLine = (number:number, ligne: number, color:string) : Case[]=>{
 const determineBonus = () : string =>{
   const randomValue = Math.random();
 
-  return randomValue < 0.98 ? 'none' : 'lamp';
+  return randomValue < 0.004 ? 'lamp' : 'none';
 }
 
 const getItem = (item: Case) : void => {
@@ -188,11 +189,6 @@ const findLeftCase = (item : Case) : Case | undefined => {
       ligne = game.value.length - 1;
 
     }
-    // else if(caseTableau ===-1 && ligne >= 0 && ligne <= 9){
-    //   caseTableau = 9;
-    //   ligne -= 1;
-
-    // }
     if(caseTableau === 0 && ligne === 0 && parcourt === 1){
       result = undefined
       break
@@ -223,7 +219,6 @@ const findTopCase = (item : Case) : Case | undefined => {
   let ligne = item.indexLigne - 1
   let topFind = false;
   let result : Case | undefined;
-  
 
   while(!topFind){
     if(ligne === -1){
@@ -421,22 +416,28 @@ const handleAddLine = () : void => {
     indexColor = Math.floor(Math.random() * (4 - 1 + 1)) + 1;
   }
 
-  lastSelectedColor.value = color[indexColor];
-  const newLine : Case[][] = getColonne(10, game.value.length, color[indexColor]);
+  if(game.value.length + game.value.length/3 < maxLine){
+    const valueScroll = game.value.length; 
+    lastSelectedColor.value = color[indexColor];
+    const newLine : Case[][] = getColonne(10, game.value.length/3, color[indexColor]);
 
-  newLine.forEach(e=>{
-    game.value.push(e);
-    
-  })
-
-  playAudio('plic');
-
-  for(let i: number = 0; i < game.value.length; i++){
-    game.value[i].forEach(e=>{
-      e.indexLigne = i;
+    newLine.forEach(e=>{
+      game.value.push(e);
+      
     })
+
+    playAudio('plic');
+
+    for(let i: number = 0; i < game.value.length; i++){
+      game.value[i].forEach(e=>{
+        e.indexLigne = i;
+      })
+    }
+
+    const element = document.getElementById(`case-${valueScroll-1}-0`);
+    element?.scrollIntoView({ behavior: 'smooth' });
+    save();
   }
-  save();
 }
 
 const handlePopupRecommencerChoice = (e:string) :void => {
@@ -479,7 +480,8 @@ const useLamp = () => {
       if(isSoluceFind){
         playAudio('selectLamp')
         lamp.value -= 1
-        window.location.href = `#case-${lampSoluces.value[1].indexLigne}-${lampSoluces.value[1].indexColonne}`;
+        const element = document.getElementById(`case-${lampSoluces.value[1].indexLigne}-${lampSoluces.value[1].indexColonne}`)
+        element?.scrollIntoView({ behavior: 'smooth' })
         canUseLamp.value = false;
         save()
         break
@@ -574,7 +576,6 @@ onMounted(() => {
       const tailleTableau = game.value.length-1;
       lastSelectedColor.value = game.value[tailleTableau][9].color;
       canUseLamp.value = lampSoluces.value.length > 0? false : true;
-      console.log(game.value.length)
     }
     else{
       createGame(10,7);
