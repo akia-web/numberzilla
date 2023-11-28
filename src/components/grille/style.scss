@@ -1,25 +1,56 @@
-span{
-    font-size: 2em;
-    border: 1px solid rgb(56, 37, 100);
+.case-jeu{
+    width: 30px;
+    height: 30px;
+    line-height: 23px;
+    border: 1px solid #4f4f4f;
     font-family: 'Pacifico', cursive;
-    display: block;
-    width: calc(100% / 10);
+    box-shadow: 2px 1px 1px #9d9db8;
+    border-radius: 7px;
+    font-size: 23px;
     position: relative;
+    font-weight: bold;
+    @media (min-width: 1024px) {
+        width: 40px;
+        height: 40px;
+        line-height: 38px;
+    }
 }
+.case-jeu:not(:last-child){
+    margin-right: 6px;
+    margin-bottom: 5px;
+}
+.case-jeu:first-child{
+    margin-left: 10px;
+}
+
+.header{
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 7vh;
+    color:var(--text-color);
+    background-color: var(--second-color-background);
+    z-index: 2;
+}
+
 
 .item{
     position: absolute;
-    top: 50%;
+    top: 47%;
     left: 50%;
     transform: translate(-50%, -50%);
-    fill: yellow;
-    width: 30px;
-    height: 30px;
-    
+    color: red;
+    font-size: 31px;
+    cursor: pointer;
+}
+
+.item:hover{
+    font-size: 35px;
 }
 
 .soluce{
-    background-color: rgb(230, 163, 173)
+    background-color: rgb(230, 163, 173) !important;
+    color:white !important;
 }
 .container-ligne{
     width: 100%;
@@ -28,12 +59,14 @@ span{
 }
 .hover-case:hover{
     color : rgb(113, 113, 179);
+    background-color: pink;
     cursor: pointer;
 }
 
 
 .active{
-    background-color: aqua 
+    background: #b695d3 !important;
+    color: white !important;
 }
 
 .main{
@@ -64,33 +97,42 @@ span{
     
 }
 
-h1{
-    color: white;
-    margin-bottom: 1em;
-}
 
 .green{
-    color: #37f537
+    color: #73bb73;
+    background-color: #f1fff1;
 }
 
 .yellow{
-    color: yellow
+    color: #ff8f00;
+    background-color: #f9e7d1;
 }
 
 .white{
-    color: white
+    color: #4db5d7;
+    background-color: #e9f5f9;
 }
 
 .blue{
-    color: lightblue
+    color: lightblue; 
 }
 
 .pink{
-    color: #ff21b9
+    color: #dd42ac;
+    background-color:#e5dae2;
 }
 .not-visible{
-    color: #3f3e3e9c;
+    background-color: #d3d3d347;
+    color: #00000045;
 }
+
+.score{
+    background-color: var(--main-color-background);
+    padding: 5px;
+    border-radius: 10px;
+    color: var(--text-color)
+}
+
 
 .removeLine{
     animation-name: removeLine;
@@ -119,3 +161,13 @@ h1{
     }
 }
 
+.symbole{
+    cursor: pointer;
+    border-radius: 20px;
+    padding: 5px;
+    transition: 0.2s ease-in-out;
+}
+
+.symbole:hover{
+    background-color: var(--main-color-background);
+}

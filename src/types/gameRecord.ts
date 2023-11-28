@@ -1,8 +1,13 @@
 import {Case} from "@/types/case"
+import {UserOptions} from "@/types/user-options"
 export interface GameRecord {
- game: Case[][] | null,
- score: number | null,
- lamp: number | null,
+ game: Case[][],
+ score: number,
+ lamp: number,
  lampSoluces: Case[],
- sound: number
+ destroyeLines:number,
+ destroyeCases: number,
+ lampUsed: number,
+ UserOptions: UserOptions
+
 }

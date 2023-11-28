@@ -1,0 +1,14 @@
+body::-webkit-scrollbar, .popup main::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+body::-webkit-scrollbar-track, .popup main::-webkit-scrollbar-track {
+    background: rgb(220, 219, 219);
+}
+  
+body::-webkit-scrollbar-thumb , .popup main::-webkit-scrollbar-thumb {
+    background-color: var(--scroll-bar);
+    border-radius: 20px;
+    transition: 0.2s ease-in-out;
+    cursor: pointer;
+}

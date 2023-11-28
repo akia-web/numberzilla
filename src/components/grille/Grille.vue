@@ -1,22 +1,49 @@
 <template>
+  <div class="header display-flex justify-center">
+    <div class=" display-flex align-item-center justify-center">
+      <div class="score display-flex align-item-center mr-nav-bar">
+        <span class="material-symbols-outlined mr-10px">kid_star</span> 
+        <span class="mr-1">{{ formatNumber(recordGame.score)  }}</span>
+        <span class="material-symbols-outlined mr-10px">payments</span>
+        <span class="mr-10px">0</span> 
+      </div>
+      <span class="material-symbols-outlined mr-nav-bar symbole">trending_up</span>
+      <span class="material-symbols-outlined mr-nav-bar symbole">menu_book</span>
+      <span class="material-symbols-outlined mr-nav-bar symbole" @click="openPopupOptions = !openPopupOptions">settings</span>
+      <span class="material-symbols-outlined mr-nav-bar symbole">shopping_cart</span>
+      <span class="material-symbols-outlined symbole" @click="scrollTop()">vertical_align_top</span>
+      <span class="material-symbols-outlined symbole" @click="scrollBottom()">vertical_align_bottom</span>
+    </div>
+    <div class="display-flex">
+ 
+    </div>
+  </div>
 
-  <div class="display-flex row-to-column justify-center align-item-center">
+  <div class="display-flex row-to-column justify-center align-item-center mt-3 padding-top">
     <div class="left-right">
+      <Statistiques  
+      :lines="recordGame.game.length" 
+      :destroyeLines="recordGame.destroyeLines"
+      :destroyeCases="recordGame.destroyeCases"
+      :lampUsed="recordGame.lampUsed"
+      
+      ></Statistiques>
     </div>
     <div class="main">
-    <div v-for="(item, index) in game" :key="index" class="container-ligne display-flex" :id="'ligne-'+index">
+    <div v-for="(item, index) in recordGame.game" :key="index" class="container-ligne display-flex" :id="'ligne-'+index">
       <!-- 'proposal': bidule.proposal -->
-      <span 
+      <p 
         v-for="caseLine in item" 
         :key="caseLine.indexColonne"
+        class="case-jeu"
         :class="{'active': caseLine.active ,[caseLine.color]: true, 'not-visible': !caseLine.visible, ['ligne-'+caseLine.indexLigne]: true, 'soluce': caseLine.soluce, 'hover-case': caseLine.visible}"
         @click="activeCase(caseLine)" :id="'case-'+caseLine.indexLigne+'-'+caseLine.indexColonne">
         {{ caseLine.number }}
-        <svg 
+        <span 
         v-if="!caseLine.visible && caseLine.item==='lamp'"
         @click="getItem(caseLine)" 
-        class="item" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 24 24"><path d="M13 24h-2c-.288 0-.563-.125-.753-.341l-.576-.659h4.658l-.576.659c-.19.216-.465.341-.753.341zm1.867-3c.287 0 .52.224.52.5s-.233.5-.52.5h-5.734c-.287 0-.52-.224-.52-.5s.233-.5.52-.5h5.734zm-2.871-17c2.983 0 6.004 1.97 6.004 5.734 0 1.937-.97 3.622-1.907 5.252-.907 1.574-1.843 3.201-1.844 5.014h1.001c0-3.286 3.75-6.103 3.75-10.266 0-4.34-3.502-6.734-7.004-6.734-3.498 0-6.996 2.391-6.996 6.734 0 4.163 3.75 6.98 3.75 10.266h.999c.001-1.813-.936-3.44-1.841-5.014-.938-1.63-1.908-3.315-1.908-5.252 0-3.764 3.017-5.734 5.996-5.734zm9.428 7.958c.251.114.362.411.248.662-.114.251-.41.363-.662.249l-.91-.414c-.252-.114-.363-.41-.249-.662.114-.251.411-.362.662-.248l.911.413zm-18.848 0c-.251.114-.362.411-.248.662.114.251.41.363.662.249l.91-.414c.252-.114.363-.41.249-.662-.114-.251-.411-.362-.662-.248l-.911.413zm18.924-2.958h-1c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h1c.276 0 .5.224.5.5s-.224.5-.5.5zm-18-1c.276 0 .5.224.5.5s-.224.5-.5.5h-1c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h1zm16.818-3.089c.227-.158.284-.469.126-.696-.157-.227-.469-.283-.696-.126l-.821.57c-.227.158-.283.469-.126.696.157.227.469.283.696.126l.821-.57zm-16.636 0c-.227-.158-.284-.469-.126-.696.157-.227.469-.283.696-.126l.821.57c.227.158.283.469.126.696-.157.227-.469.283-.696.126l-.821-.57zm13.333-3.033c.134-.241.048-.546-.193-.68-.241-.135-.546-.048-.68.192l-.488.873c-.135.241-.048.546.192.681.241.134.546.048.681-.193l.488-.873zm-10.03 0c-.134-.241-.048-.546.193-.68.241-.135.546-.048.68.192l.488.873c.135.241.048.546-.192.681-.241.134-.546.048-.681-.193l-.488-.873zm5.515-1.378c0-.276-.224-.5-.5-.5s-.5.224-.5.5v1c0 .276.224.5.5.5s.5-.224.5-.5v-1z"/></svg>
-      </span>
+        class="item"> 💡</span>
+    </p>
  
     </div>
   </div>
@@ -26,8 +53,8 @@
         @open-popup-options="handleOpenPopupOptions" 
         @addLine="handleAddLine"  
         @useLamp="useLamp" 
-        :score="score" 
-        :lamp="lamp"
+        :score="recordGame.score" 
+        :lamp="recordGame.lamp"
         :can-use-lamp="canUseLamp"
       />
     </div>
@@ -38,39 +65,41 @@
 
     <PopupOptions 
       v-if="openPopupOptions" 
-      @options-jeu="handlePopupOptionsChoice"
-      :soundValue="Number(soundValue)"
+      @change-volume="handleChangeVolume"
+      @changeColor="handleChangeColor"
+      @close-settings-popup="handleClosePopupSettings"
+      :soundValue="Number(recordGame.UserOptions.sound)"
+      :colorsValue="recordGame.UserOptions.optionColors"
     />
 
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import {Case} from "@/types/case"
 import {NearCase} from "@/types/nearCase"
 import {GameRecord} from "@/types/gameRecord"
+import {findRightCase, findLeftCase, findbottomCase, findTopCase} from "@/functions/findCase"
 import Action from '@/components/actions/Actions.vue'
 import PopupRecommencer from '@/components/popup/popup-recommencer/popup-recommencer.vue'
 import PopupOptions from '@/components/popup/popup-son/popup-options.vue'
-const recordGame = ref<GameRecord>({game:null, score:null, lamp: null, lampSoluces: [], sound: 0.5});
-const game = ref<Case[][]>([]);
+import Statistiques from '@/components/statistiques/statistiques.vue'
+import {DefaultRecordGame} from '@/data/default-record-game'
+import { formatNumber } from '@/functions/formats';
+const recordGame = ref<GameRecord>(DefaultRecordGame);
 const caseSelected1 = ref<Case | null>(null);
 let possibility = ref<NearCase|null>(null);
-let score = ref<number>(0);
-let lamp = ref<number>(0);
 let lastSelectedColor = ref<string>('white');
 let openPopupRecommencer = ref<boolean>(false);
 let openPopupOptions = ref<boolean>(false);
-let soundValue = ref<number>(0.5);
-let lampSoluces = ref<Case[]>([]);
 let canUseLamp = ref<boolean>(true);
 const maxLine : number = 1000;
 
 const color: string[] = ['blue', 'pink', 'green', 'yellow', 'white'];
 
 const createGame = (colonne: number, ligne: number) : void => {
-  game.value =  getColonne(colonne, ligne, color[4]);
+  recordGame.value.game = getColonne(colonne, ligne, color[4]);
   lastSelectedColor.value = color[4];
   save()
 }
@@ -113,7 +142,7 @@ const determineBonus = () : string =>{
 const getItem = (item: Case) : void => {
   if(item.item === 'lamp'){
     playAudio('getBonus')
-    lamp.value += 1
+    recordGame.value.lamp! += 1
   }
   item.item = 'none';
   save()
@@ -121,165 +150,18 @@ const getItem = (item: Case) : void => {
 
 const allNearCase= (item: Case) : void=>{
   let result : NearCase = {};
-  result.right = findRightCase(item);
-  result.left = findLeftCase(item);
-  result.top = findTopCase(item);
-  result.bottom = findbottomCase(item)
+  result.right = findRightCase(item, recordGame.value);
+  result.left = findLeftCase(item, recordGame.value);
+  result.top = findTopCase(item, recordGame.value);
+  result.bottom = findbottomCase(item, recordGame.value)
   possibility.value = result;
-}
-
-const findRightCase = (item : Case) : Case | undefined => {
-  // calcule right
-  let rightFind = false;
-  let caseTableau = item.indexColonne+1;
-  let ligne = item.indexLigne;
-  let result : Case | undefined;
-  let parcourt = 0;
-
-  while(!rightFind){
-    if(caseTableau === 10 && ligne === game.value.length - 1 && parcourt === 0){
-      parcourt = 1;
-      caseTableau = 0;
-      ligne = 0;
-    }else if(caseTableau === 10 && ligne < game.value.length){
-      caseTableau = 0;
-      ligne += 1;
-    }
-
-    if(caseTableau === 10 && ligne === game.value.length - 1 && parcourt === 1){
-      result = undefined;
-      break;
-    }
-
-    for(let i : number = caseTableau; i < game.value[ligne].length; i++){
-      if(game.value[ligne][i].visible===true){
-        result = game.value[ligne][i];
-        result.proposal = true;
-        rightFind = true;
-        break
-      }
-    }
-
-    caseTableau = 0;
-    if(ligne + 1 >= game.value.length){
-      ligne = 0;
-    }else{
-      ligne += 1;
-    }
-    
-  }
-  return result;
-  
-}
-
-const findLeftCase = (item : Case) : Case | undefined => {
-   let caseTableau = item.indexColonne-1;
-   let ligne = item.indexLigne;
-   let parcourt = 0;
-   let leftFind = false;
-   let result : Case | undefined;
-  
-   while(!leftFind){
-    if(caseTableau === -1 && ligne === 0){
-      caseTableau = 9;
-      ligne = game.value.length - 1;
-    }else if(caseTableau === 0 && ligne === 0 && parcourt === 0){
-      parcourt = 1;
-      caseTableau = 9;
-      ligne = game.value.length - 1;
-
-    }
-    if(caseTableau === 0 && ligne === 0 && parcourt === 1){
-      result = undefined
-      break
-    }
-    for(let i = caseTableau; i >= 0; i--){
-      if(game.value[ligne][i].visible===true){
-        result = game.value[ligne][i]
-        result.proposal = true
-        leftFind = true
-        break
-      }
-    }
-    caseTableau = 9
-    if(ligne === 0){
-      ligne = game.value.length-1
-    }else{
-      ligne -= 1
-    }
-    
-
-  }
-  return result;
-  
-}
-
-const findTopCase = (item : Case) : Case | undefined => {
-  let caseTableau = item.indexColonne
-  let ligne = item.indexLigne - 1
-  let topFind = false;
-  let result : Case | undefined;
-
-  while(!topFind){
-    if(ligne === -1){
-      result = undefined
-      topFind = true
-      break
-    }
-    for(let i = ligne; i >= 0; i--){
-      if(game.value[i][caseTableau].visible===true){
-        // result.left = game.value[ligne][i]
-        result = game.value[i][caseTableau]
-        result.proposal = true
-        topFind = true
-        break
-      }
-    }
-    if(ligne === 0 && !result){
-      result = undefined
-      topFind = true
-    }else{
-      ligne -= 1
-    }
-  }
-  return result
-  
-}
-
-const findbottomCase = (item : Case) : Case | undefined => {
-  let caseTableau = item.indexColonne
-  let ligne = item.indexLigne + 1
-  let result : Case | undefined;
-  let bottomFind = false;
-  while(!bottomFind){
-    if(ligne === game.value.length){
-      result = undefined
-      bottomFind = true
-      break
-    }
-    for(let i = ligne; i < game.value.length; i++){
-        if(game.value[i][caseTableau].visible===true){
-          result = game.value[i][caseTableau]
-          bottomFind = true
-          result.proposal = true
-          break
-        }
-    }
-      if(ligne === game.value.length - 1 && !result){
-      result = undefined
-      bottomFind = true
-      }else{
-      ligne += 1
-    }
-  }
-  return result
 }
 
 const removingLine=(item:Case) : boolean =>{
   const line : Element | null = document.querySelector(`#ligne-${item.indexLigne}`);
   let deleteLine : boolean = true;
   let lampNotCollected = 0
-  game.value[item.indexLigne].forEach((e)=>{
+  recordGame.value.game![item.indexLigne].forEach((e)=>{
     if(e.item === 'lamp'){
       lampNotCollected += 1;
     }
@@ -289,17 +171,18 @@ const removingLine=(item:Case) : boolean =>{
   })
   if(deleteLine){
     playAudio('removeline');
-    lamp.value += lampNotCollected;
+    recordGame.value.lamp += lampNotCollected;
     line?.classList.add('removeLine');
     setTimeout(function () {
-      game.value.splice(item.indexLigne,1);
+      recordGame.value.game!.splice(item.indexLigne,1);
 
-      for(let i=0; i<game.value.length;i++){
-        game.value[i].forEach(e=>{
+      for(let i=0; i<recordGame.value.game!.length;i++){
+        recordGame.value.game![i].forEach(e=>{
           e.indexLigne = i;
         })
       }
-      score.value += 100;
+      recordGame.value.score += 100;
+      recordGame.value.destroyeLines+= 1
       save()
     }, 200 )
     setTimeout(function () {
@@ -317,46 +200,47 @@ const activeCase = (item : Case) : void => {
     const itemIsInPossibility : number = possibilityCase.indexOf(item);
     
       if(itemIsInPossibility !== -1 && (caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number)){
-        playAudio('pop');    
+        playAudio('pop'); 
+        recordGame.value.destroyeCases += 2   
         caseSelected1.value.visible = false;
-          item.visible = false;
+        item.visible = false;
           
-          score.value += caseSelected1.value.number + item.number === 10 ?  10 : 5;
+        recordGame.value.score += caseSelected1.value.number + item.number === 10 ?  10 : 5;
 
-          if(item.soluce || caseSelected1.value.soluce){
-            item.soluce = false
-            caseSelected1.value.soluce = false;
-            lampSoluces.value.forEach(e=>{
-              game.value[e.indexLigne][e.indexColonne].soluce = false
-            })
-            lampSoluces.value= []
-            canUseLamp.value = true 
+        if(item.soluce || caseSelected1.value.soluce){
+          item.soluce = false
+          caseSelected1.value.soluce = false;
+          recordGame.value.lampSoluces.forEach(e=>{
+            recordGame.value.game![e.indexLigne][e.indexColonne].soluce = false
+          })
+          recordGame.value.lampSoluces= []
+          canUseLamp.value = true 
 
-          }
+        }
+        caseSelected1.value.active = false;
+        item.active = false;
+        possibility.value = null;
+        const suppressLine1 : boolean = removingLine(caseSelected1.value);
+
+        if(caseSelected1.value.indexLigne !== item.indexLigne){
+          setTimeout(function () {
+          removingLine(item);
+          },suppressLine1? 203 : 0)
+        }
+        caseSelected1.value = null;
+        save();
+      }else{
+        if(item.visible){
+          playAudio('select')
           caseSelected1.value.active = false;
           item.active = false;
           possibility.value = null;
-          const suppressLine1 : boolean = removingLine(caseSelected1.value);
-
-          if(caseSelected1.value.indexLigne !== item.indexLigne){
-            setTimeout(function () {
-            removingLine(item);
-            },suppressLine1? 203 : 0)
-          }
-          caseSelected1.value = null;
-          save();
-        }else{
-          if(item.visible){
-            playAudio('select')
-            caseSelected1.value.active = false;
-            item.active = false;
-            possibility.value = null;
-            caseSelected1.value = item;
-            caseSelected1.value.active = true;
-            allNearCase(caseSelected1.value);
-          }
-        
+          caseSelected1.value = item;
+          caseSelected1.value.active = true;
+          allNearCase(caseSelected1.value);
         }
+      
+      }
   }else{
     if(item.visible){
       item.active = true
@@ -369,29 +253,15 @@ const activeCase = (item : Case) : void => {
   }
 }
 
+const chargeAudio = () => {
+  const audio = new Audio(require(`@/assets/pop.mp3`));
+  audio.load()
+}
+
 const playAudio = async (name:string) : Promise<void> => {
-  const audioContext = new (window.AudioContext)();
-
-  try {
-    const response = await fetch(require(`@/assets/${name}.mp3`));
-    const data = await response.arrayBuffer();
-    const buffer = await audioContext.decodeAudioData(data);
-
-    const gainNode = audioContext.createGain();
-    gainNode.gain.value = soundValue.value;
-
-    const audioElement = audioContext.createBufferSource();
-    audioElement.buffer = buffer;
-
-    // Connecter le nœud audio au contexte audio
-    audioElement.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Jouer le fichier audio
-    audioElement.start(0);
-  } catch (error) {
-    console.error('Erreur lors du chargement du fichier audio', error);
-  }
+  const audio = new Audio(require(`@/assets/${name}.mp3`));
+  audio.volume = recordGame.value.UserOptions.sound;
+  audio.play()
 };
 
 const handleOpenPopupRecommencer = () : void => {
@@ -402,11 +272,13 @@ const handleOpenPopupOptions = () : void => {
   openPopupOptions.value = true
 }
 
-const handlePopupOptionsChoice = (e:number): void => {
+const handleChangeVolume = (e:number): void => {
+  recordGame.value.UserOptions.sound = e
+  console.log(recordGame.value.UserOptions.sound)
+}
+const handleClosePopupSettings = (e:any): void => {
   openPopupOptions.value = false
-  soundValue.value = e
   save()
-  console.log(soundValue.value)
 }
 
 const handleAddLine = () : void => {
@@ -416,20 +288,20 @@ const handleAddLine = () : void => {
     indexColor = Math.floor(Math.random() * (4 - 1 + 1)) + 1;
   }
 
-  if(game.value.length + game.value.length/3 < maxLine){
-    const valueScroll = game.value.length; 
+  if(recordGame.value.game!.length + recordGame.value.game!.length/3 < maxLine){
+    const valueScroll = recordGame.value.game!.length; 
     lastSelectedColor.value = color[indexColor];
-    const newLine : Case[][] = getColonne(10, game.value.length/3, color[indexColor]);
+    const newLine : Case[][] = getColonne(10, recordGame.value.game!.length/3, color[indexColor]);
 
     newLine.forEach(e=>{
-      game.value.push(e);
+      recordGame.value.game!.push(e);
       
     })
 
     playAudio('plic');
 
-    for(let i: number = 0; i < game.value.length; i++){
-      game.value[i].forEach(e=>{
+    for(let i: number = 0; i < recordGame.value.game!.length; i++){
+      recordGame.value.game![i].forEach(e=>{
         e.indexLigne = i;
       })
     }
@@ -443,32 +315,51 @@ const handleAddLine = () : void => {
 const handlePopupRecommencerChoice = (e:string) :void => {
   if(e === 'oui'){
       createGame(10,7);
-      lampSoluces.value = []
+      recordGame.value.lampSoluces = [];
+      recordGame.value.destroyeCases = 0;
+      recordGame.value.destroyeLines = 0;
+      recordGame.value.lampUsed = 0;
       save();
   }
   openPopupRecommencer.value = false;
 }
 
+const handleChangeColor = (e:{type:string, colorChoice:string}):void =>{
+
+  switch (e.type){
+    case 'background' :
+      document.documentElement.style.setProperty('--main-color-background', e.colorChoice);
+      recordGame.value.UserOptions.optionColors.backgroundColor = e.colorChoice;
+      console.log('background')
+      break
+    case 'second-color-background' : 
+      document.documentElement.style.setProperty('--second-color-background', e.colorChoice);
+      recordGame.value.UserOptions.optionColors.secondColorBackground = e.colorChoice;
+      console.log('middle-background')
+      break
+    case 'text-color':
+    document.documentElement.style.setProperty('--text-color', e.colorChoice);
+    recordGame.value.UserOptions.optionColors.textColor = e.colorChoice;
+    case 'scroll-bar':
+    document.documentElement.style.setProperty('--scroll-bar', e.colorChoice);
+    recordGame.value.UserOptions.optionColors.scroll = e.colorChoice;
+  }
+}
 
 const save = () : void => {
-  recordGame.value.game = game.value;
-  recordGame.value.score = score.value;
-  recordGame.value.lamp = lamp.value;
-  recordGame.value.lampSoluces = lampSoluces.value;
-  recordGame.value.sound = soundValue.value;
   const objetTransformer = JSON.stringify(recordGame);
   localStorage.setItem('numberzilla', objetTransformer);
 }
 
 const useLamp = () => {
-  if(lamp.value>0){
+  if(recordGame.value.lamp>0){
     let caseGame = 0;
     let ligne = 0
     let parcourtSoluce = 0;
     let findSoluce = false;
 
     while(!findSoluce){
-      let item = getNextCase(game.value[ligne][caseGame])
+      let item = getNextCase(recordGame.value.game![ligne][caseGame])
       if(item === undefined){
         playAudio('negative')
         break
@@ -479,8 +370,9 @@ const useLamp = () => {
 
       if(isSoluceFind){
         playAudio('selectLamp')
-        lamp.value -= 1
-        const element = document.getElementById(`case-${lampSoluces.value[1].indexLigne}-${lampSoluces.value[1].indexColonne}`)
+        recordGame.value.lamp -= 1
+        recordGame.value.lampUsed += 1
+        const element = document.getElementById(`case-${recordGame.value.lampSoluces[1].indexLigne}-${recordGame.value.lampSoluces[1].indexColonne}`)
         element?.scrollIntoView({ behavior: 'smooth' })
         canUseLamp.value = false;
         save()
@@ -493,11 +385,11 @@ const useLamp = () => {
         caseGame = 0
         ligne += 1
       }
-      if(ligne === game.value.length){
+      if(ligne === recordGame.value.game!.length){
         ligne = 0
       }
 
-      if(caseGame === 9 && ligne === game.value.length -1){
+      if(caseGame === 9 && ligne === recordGame.value.game!.length -1){
         parcourtSoluce += 1
       }
 
@@ -515,10 +407,10 @@ const getNextCase = (item : Case | undefined ) => {
   let ligne = item!.indexLigne;
   let column = item!.indexColonne
   while(!findItem){
-    if(ligne === game.value.length){
+    if(ligne === recordGame.value.game!.length){
       return item = undefined
     }
-    item = game.value[ligne][column] 
+    item = recordGame.value.game![ligne][column] 
     if (item && item.visible){
       return item
     }
@@ -529,7 +421,7 @@ const getNextCase = (item : Case | undefined ) => {
       column = 0
       ligne += 1
     }
-    if(ligne === game.value.length){
+    if(ligne === recordGame.value.game!.length){
       ligne = 0
     }
 
@@ -542,20 +434,20 @@ const getNextCase = (item : Case | undefined ) => {
 const getSoluce = ( item : Case ) => {
   let response : boolean = false;
   if(possibility.value?.right && (possibility.value?.right?.number === item.number ||  possibility.value!.right!.number + item.number === 10)){
-      lampSoluces.value = []
+      recordGame.value.lampSoluces = []
       item.soluce = true
       possibility.value!.right!.soluce = true
-      lampSoluces.value.push(item)
-      lampSoluces.value.push(possibility.value!.right!)
+      recordGame.value.lampSoluces.push(item)
+      recordGame.value.lampSoluces.push(possibility.value!.right!)
       return response = true
   }
   
   if(possibility.value?.top && (possibility.value?.top?.number === item.number ||  possibility.value!.top!.number + item.number === 10)){
-      lampSoluces.value = []
+      recordGame.value.lampSoluces = []
       item.soluce = true
       possibility.value!.top!.soluce = true
-      lampSoluces.value?.push(item)
-      lampSoluces.value?.push(possibility.value!.top!)
+      recordGame.value.lampSoluces?.push(item)
+      recordGame.value.lampSoluces?.push(possibility.value!.top!)
       return response = true
   }
 
@@ -563,27 +455,92 @@ const getSoluce = ( item : Case ) => {
   return response 
 }
 
-onMounted(() => {
-    const getLocalStorage = localStorage.getItem('numberzilla');
+const scrollTop = () => {
+  window.scroll({top:0, behavior:'smooth'})
+}
 
+const scrollBottom = () => {
+  window.scroll({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+}
+
+onMounted(() => {
+  const defaultGame = DefaultRecordGame
+  console.log(defaultGame)
+    const getLocalStorage = localStorage.getItem('numberzilla');
+    chargeAudio()
+    // document.documentElement.style.setProperty('--main-color-background', "#21163B");
     if(getLocalStorage){
       const gameParse = JSON.parse(getLocalStorage);
-      game.value = gameParse._value.game;
-      score.value = gameParse._value.score;
-      lamp.value = gameParse._value.lamp;
-      lampSoluces.value = gameParse._value.lampSoluces
-      soundValue.value = gameParse._value.sound
-      const tailleTableau = game.value.length-1;
-      lastSelectedColor.value = game.value[tailleTableau][9].color;
-      canUseLamp.value = lampSoluces.value.length > 0? false : true;
+      console.log(gameParse._value)
+
+      try{
+        recordGame.value.game = gameParse._value.game;
+      }catch(e){
+        createGame(10,7);
+      }
+      
+      if(gameParse._value.score){
+        recordGame.value.score = gameParse._value.score
+      }
+
+      if(gameParse._value.lamp){
+        recordGame.value.lamp = gameParse._value.lamp;
+      }
+
+      if(gameParse._value.lampSoluces){
+        recordGame.value.lampSoluces = gameParse._value.lampSoluces;
+      }
+
+      if(gameParse._value.UserOptions && gameParse._value.UserOptions.sound){
+        recordGame.value.UserOptions.sound = gameParse._value.UserOptions.sound;
+      }
+
+      if(gameParse._value.lampUsed){
+        recordGame.value.lampUsed = gameParse._value.lampUsed;
+      }
+      
+      if( gameParse._value.destroyeLines){
+        recordGame.value.destroyeLines = gameParse._value.destroyeLines
+      }
+
+      if( gameParse._value.destroyeCases){
+        recordGame.value.destroyeCases = gameParse._value.destroyeCases
+      }
+
+      if(gameParse._value.UserOptions.optionColors){
+        if(gameParse._value.UserOptions.optionColors.backgroundColor){
+          recordGame.value.UserOptions.optionColors.backgroundColor =  gameParse._value.UserOptions.optionColors.backgroundColor
+        }
+        if(gameParse._value.UserOptions.optionColors.secondColorBackground){
+          recordGame.value.UserOptions.optionColors.secondColorBackground =  gameParse._value.UserOptions.optionColors.secondColorBackground
+        }
+        if(gameParse._value.UserOptions.optionColors.scroll){
+          recordGame.value.UserOptions.optionColors.scroll =  gameParse._value.UserOptions.optionColors.scroll
+        }
+        if(gameParse._value.UserOptions.optionColors.textColor){
+          recordGame.value.UserOptions.optionColors.textColor =  gameParse._value.UserOptions.optionColors.textColor
+        }
+
+      }
+     
+
+      const tailleTableau = recordGame.value.game!.length-1;
+      lastSelectedColor.value = recordGame.value.game![tailleTableau][9].color;
+      canUseLamp.value = recordGame.value.lampSoluces.length > 0? false : true;
+      console.log(recordGame.value)
     }
     else{
       createGame(10,7);
-      score.value = 0;
-      lamp.value = 0;
-      lampSoluces.value = []
-      soundValue.value = 0.5
+         
     }
+
+    document.documentElement.style.setProperty('--main-color-background', recordGame.value.UserOptions.optionColors.backgroundColor);
+    document.documentElement.style.setProperty('--second-color-background', recordGame.value.UserOptions.optionColors.secondColorBackground);
+    document.documentElement.style.setProperty('--scroll-bar', recordGame.value.UserOptions.optionColors.scroll);    
+    document.documentElement.style.setProperty('--text-color', recordGame.value.UserOptions.optionColors.textColor); 
     
 })
 </script>
