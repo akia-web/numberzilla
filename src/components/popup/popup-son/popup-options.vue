@@ -86,9 +86,6 @@
 
 <style scoped src="../style.scss" lang="scss"></style>
 <style>
-@import url('vue-accessible-color-picker/styles');
-
-
 .fond{
     position: absolute;
     background:transparent;
