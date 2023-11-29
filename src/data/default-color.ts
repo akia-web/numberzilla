@@ -5,4 +5,5 @@ export const DefaultColors  : UserOptionsColors = {
     secondColorBackground: '#395E74',
     scroll:'#FF00E6',
     textColor:'#ffffff',
-}  
+}
+

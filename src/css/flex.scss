@@ -1,0 +1,36 @@
+.display-flex{
+    display: flex;
+}
+.direction-column{
+    flex-direction: column;
+}
+
+.row-to-column{
+    flex-direction: row;
+
+    @media (max-width: 1024px) {
+        flex-direction: column;
+    }
+}
+
+.justify-center{
+    justify-content: center;
+}
+
+.justify-space-between{
+    justify-content: space-between;
+}
+
+.align-item-center{
+    align-items: center;
+}
+
+.align-item-end{
+    align-items: end;
+}
+.display-block-to-none{
+    display: block;
+    @media (min-width: 1024px){ 
+        display: none;
+    }
+}

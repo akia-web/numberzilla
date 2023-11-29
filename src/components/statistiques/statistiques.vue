@@ -10,7 +10,14 @@
         <br>
         <hr>
         <br>
-        <p>Indices utilisés : {{formatNumber(props.lampUsed)}} </p>
+        <div class="display-flex align-item-center">
+            <span>💡</span>
+            <p>Indices utilisés : {{formatNumber(props.lampUsed)}} </p>
+        </div>
+        <div class="display-flex align-item-center">
+            <span class="material-symbols-outlined mr-10px">swap_horiz</span>
+            <p> Échanges utilisés : {{formatNumber(props.echangeUsed)}} </p>
+        </div>
     </div>
 </template>
 
@@ -22,6 +29,7 @@
     destroyeLines: number,
     destroyeCases: number,
     lampUsed: number,
+    echangeUsed: number
     }>()
  
 </script>

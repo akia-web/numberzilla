@@ -1,11 +1,19 @@
 .container-statistiques{
-    background-color: var(--second-color-background);
-    padding: 3px;
-    position: fixed;
-    left: 70px;
-    width: 20%;
-    top: 114px ;
-    color: var(--text-color);
-    padding: 10px;
-    border-radius: 7px;
+    display: none;
+    @media (min-width: 1024px){ 
+        display: block;
+        background-color: var(--second-color-background);
+        padding: 3px;
+        position: fixed;
+        left: 6px;
+        width: 20%;
+        top: 114px ;
+        color: var(--text-color);
+        padding: 10px;
+        border-radius: 7px;
+    }
+
+    @media (min-width: 1200px){ 
+        left: 5%;
+    }
 }

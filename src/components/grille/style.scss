@@ -1,7 +1,7 @@
 .case-jeu{
-    width: 30px;
-    height: 30px;
-    line-height: 23px;
+    width: 40px;
+    height: 40px;
+    line-height: 35px;
     border: 1px solid #4f4f4f;
     font-family: 'Pacifico', cursive;
     box-shadow: 2px 1px 1px #9d9db8;
@@ -10,19 +10,11 @@
     position: relative;
     font-weight: bold;
     @media (min-width: 1024px) {
-        width: 40px;
-        height: 40px;
-        line-height: 38px;
+        width: 60px;
+        height: 60px;
+        line-height: 52px;
     }
 }
-.case-jeu:not(:last-child){
-    margin-right: 6px;
-    margin-bottom: 5px;
-}
-.case-jeu:first-child{
-    margin-left: 10px;
-}
-
 .header{
     position: fixed;
     top: 0;
@@ -32,7 +24,6 @@
     background-color: var(--second-color-background);
     z-index: 2;
 }
-
 
 .item{
     position: absolute;
@@ -48,14 +39,30 @@
     font-size: 35px;
 }
 
+.point{
+    position: absolute;
+    width: 100%;
+    top: 49%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f75708;
+    font-size: 12px;
+    background-color: white;
+    background-color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 .soluce{
     background-color: rgb(230, 163, 173) !important;
     color:white !important;
 }
 .container-ligne{
-    width: 100%;
-    max-width: 420px;
-    margin: 0 auto;
+    width: auto;
+    margin: 0 auto 0.2rem 0;
+    @media (min-width: 1024px) {
+        margin: 0 auto 0.3rem 0;
+    }   
 }
 .hover-case:hover{
     color : rgb(113, 113, 179);
@@ -63,38 +70,30 @@
     cursor: pointer;
 }
 
-
 .active{
     background: #b695d3 !important;
     color: white !important;
 }
 
+.active-echange-mode{
+    background: #4da157 !important;
+    color: white !important;
+}
+
 .main{
-    width: 90%;
+    width: 95%;
     margin: 3em 0 13vh 0;
     text-align: center;
+    max-width: 395px;
     
     @media (min-width: 1024px) {
-        width: 60%;
+        max-width: 577px;
     }
 }
 
 .proposal{
     background-color: #b981a8;
     border: 1px dotted #ffffff;
-}
-
-.left-right{
-    width: 35%;
-    position: relative;
-}
-
-.left-right:first-child{
-    display: none;
-    @media (min-width: 1024px) {
-        display: block;
-    }
-    
 }
 
 

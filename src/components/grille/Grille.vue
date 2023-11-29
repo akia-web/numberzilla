@@ -5,10 +5,13 @@
         <span class="material-symbols-outlined mr-10px">kid_star</span> 
         <span class="mr-1">{{ formatNumber(recordGame.score)  }}</span>
         <span class="material-symbols-outlined mr-10px">payments</span>
-        <span class="mr-10px">0</span> 
+        <span class="mr-10px">{{formatNumber(recordGame.money)}}</span> 
       </div>
       <span class="material-symbols-outlined mr-nav-bar symbole">trending_up</span>
-      <span class="material-symbols-outlined mr-nav-bar symbole">menu_book</span>
+      <span class="material-symbols-outlined mr-nav-bar symbole display-block-to-none" 
+        @click="openPopupStatistiques = !openPopupStatistiques">
+        menu_book
+      </span>
       <span class="material-symbols-outlined mr-nav-bar symbole" @click="openPopupOptions = !openPopupOptions">settings</span>
       <span class="material-symbols-outlined mr-nav-bar symbole">shopping_cart</span>
       <span class="material-symbols-outlined symbole" @click="scrollTop()">vertical_align_top</span>
@@ -26,26 +29,44 @@
       :destroyeLines="recordGame.destroyeLines"
       :destroyeCases="recordGame.destroyeCases"
       :lampUsed="recordGame.lampUsed"
-      
+      :echange-used="recordGame.echangeUsed"
       ></Statistiques>
     </div>
+
     <div class="main">
-    <div v-for="(item, index) in recordGame.game" :key="index" class="container-ligne display-flex" :id="'ligne-'+index">
-      <!-- 'proposal': bidule.proposal -->
-      <p 
-        v-for="caseLine in item" 
-        :key="caseLine.indexColonne"
-        class="case-jeu"
-        :class="{'active': caseLine.active ,[caseLine.color]: true, 'not-visible': !caseLine.visible, ['ligne-'+caseLine.indexLigne]: true, 'soluce': caseLine.soluce, 'hover-case': caseLine.visible}"
-        @click="activeCase(caseLine)" :id="'case-'+caseLine.indexLigne+'-'+caseLine.indexColonne">
-        {{ caseLine.number }}
-        <span 
-        v-if="!caseLine.visible && caseLine.item==='lamp'"
-        @click="getItem(caseLine)" 
-        class="item"> 💡</span>
-    </p>
- 
-    </div>
+      <div v-for="(item, index) in recordGame.game" :key="index" 
+      class="container-ligne display-flex justify-space-between" 
+      :id="'ligne-'+index">
+        <!-- 'proposal': bidule.proposal -->
+        <p 
+          v-for="caseLine in item" 
+          :key="caseLine.indexColonne"
+          class="case-jeu"
+          :class="{'active': caseLine.active, 'active-echange-mode' : caseLine.isOnEchangeMode,[caseLine.color]: true, 'not-visible': !caseLine.visible, ['ligne-'+caseLine.indexLigne]: true, 'soluce': caseLine.soluce, 'hover-case': caseLine.visible}"
+          @click="activeCase(caseLine)" :id="'case-'+caseLine.indexLigne+'-'+caseLine.indexColonne">
+          {{ caseLine.number }}
+          <span 
+          v-if="!caseLine.visible && caseLine.item==='lamp'"
+          @click="getItem(caseLine)" 
+          class="item"> 💡</span>
+
+          <span v-if="!caseLine.visible && caseLine.item==='money'"
+          class="item" @click="getItem(caseLine)">
+            💰
+          </span>
+
+          <span v-if="!caseLine.visible && caseLine.item==='echanger'"
+          class="material-symbols-outlined item item-case" @click="getItem(caseLine)">
+            swap_horiz
+          </span>
+
+          <span v-if="!caseLine.visible && caseLine.item==='1000pts'"
+          class="point" @click="getItem(caseLine)">
+            +1000
+          </span>
+        </p>
+  
+      </div>
   </div>
     <div class="left-right">
       <Action 
@@ -53,9 +74,12 @@
         @open-popup-options="handleOpenPopupOptions" 
         @addLine="handleAddLine"  
         @useLamp="useLamp" 
-        :score="recordGame.score" 
+        @useEchange="activeEchangeMode"
+        @stop-echange="handleStopEchange"
         :lamp="recordGame.lamp"
         :can-use-lamp="canUseLamp"
+        :echange="recordGame.echange"
+        :echangeMode="echangeMode"
       />
     </div>
     <PopupRecommencer 
@@ -71,6 +95,15 @@
       :soundValue="Number(recordGame.UserOptions.sound)"
       :colorsValue="recordGame.UserOptions.optionColors"
     />
+    <PopupStatistiques
+      v-if="openPopupStatistiques"  
+      :lines="recordGame.game.length" 
+      :destroyeLines="recordGame.destroyeLines"
+      :destroyeCases="recordGame.destroyeCases"
+      :lampUsed="recordGame.lampUsed"
+      :echange-used="recordGame.echangeUsed"
+      @close-popup-statistiques="openPopupStatistiques = !openPopupStatistiques"
+      ></PopupStatistiques>
 
   </div>
 </template>
@@ -83,18 +116,24 @@ import {GameRecord} from "@/types/gameRecord"
 import {findRightCase, findLeftCase, findbottomCase, findTopCase} from "@/functions/findCase"
 import Action from '@/components/actions/Actions.vue'
 import PopupRecommencer from '@/components/popup/popup-recommencer/popup-recommencer.vue'
-import PopupOptions from '@/components/popup/popup-son/popup-options.vue'
+import PopupOptions from '@/components/popup/popup-options/popup-options.vue'
+import PopupStatistiques from '@/components/popup/popup-statistiques/popup-statistiques.vue'
 import Statistiques from '@/components/statistiques/statistiques.vue'
-import {DefaultRecordGame} from '@/data/default-record-game'
+import {DefaultRecordGame, defaultTotalCase} from '@/data/default-record-game'
 import { formatNumber } from '@/functions/formats';
+import { assignPropertieColor, isValidGame, matchJson } from '@/functions/valid-game';
 const recordGame = ref<GameRecord>(DefaultRecordGame);
 const caseSelected1 = ref<Case | null>(null);
 let possibility = ref<NearCase|null>(null);
 let lastSelectedColor = ref<string>('white');
 let openPopupRecommencer = ref<boolean>(false);
 let openPopupOptions = ref<boolean>(false);
+let openPopupStatistiques = ref<boolean>(false);
 let canUseLamp = ref<boolean>(true);
+let echangeMode = ref<boolean>(false);
 const maxLine : number = 1000;
+
+let tabNumberExchange = ref<Case[]>([])
 
 const color: string[] = ['blue', 'pink', 'green', 'yellow', 'white'];
 
@@ -126,7 +165,8 @@ const getLine = (number:number, ligne: number, color:string) : Case[]=>{
       proposal: false,
       color: color,
       item: determineBonus(),
-      soluce: false
+      soluce: false,
+      isOnEchangeMode:false
     };
     result.push(caseTableau);
   }
@@ -136,13 +176,34 @@ const getLine = (number:number, ligne: number, color:string) : Case[]=>{
 const determineBonus = () : string =>{
   const randomValue = Math.random();
 
-  return randomValue < 0.004 ? 'lamp' : 'none';
+  let result;
+
+  if (randomValue < 0.004) { // 0.004% de chance
+      result = 'lamp';
+  } else if (randomValue < 0.014) { // 0.010% de chance
+      result = 'money';
+  } else if (randomValue < 0.024) { // 0.010% de chance
+      result = '1000pts';
+  } else if (randomValue < 0.026) { // 0.002% de chance
+      result = 'echanger';
+  } else {
+      result = 'none';
+  }
+
+return result;
 }
 
 const getItem = (item: Case) : void => {
+  console.log(item.item)
+  playAudio('getBonus')
   if(item.item === 'lamp'){
-    playAudio('getBonus')
-    recordGame.value.lamp! += 1
+    recordGame.value.lamp += 1
+  }else if(item.item === 'echanger'){
+    recordGame.value.echange +=1
+  }else if(item.item === 'money'){
+    recordGame.value.money +=1
+  }else if(item.item === '1000pts'){
+    recordGame.value.score +=1000
   }
   item.item = 'none';
   save()
@@ -160,11 +221,21 @@ const allNearCase= (item: Case) : void=>{
 const removingLine=(item:Case) : boolean =>{
   const line : Element | null = document.querySelector(`#ligne-${item.indexLigne}`);
   let deleteLine : boolean = true;
-  let lampNotCollected = 0
+  let lampNotCollected = 0;
+  let pointNotCollected = 0;
+  let moneyNotCollected = 0;
+  let echangeNotCollected = 0;
   recordGame.value.game![item.indexLigne].forEach((e)=>{
     if(e.item === 'lamp'){
       lampNotCollected += 1;
+    }else if(e.item === 'money'){
+      moneyNotCollected += 1
+    }else if(e.item === '1000pts'){
+      pointNotCollected += 1
+    }else if(e.item === 'echanger'){
+      echangeNotCollected += 1
     }
+
     if(e.visible){
       deleteLine = false;
     }
@@ -172,6 +243,10 @@ const removingLine=(item:Case) : boolean =>{
   if(deleteLine){
     playAudio('removeline');
     recordGame.value.lamp += lampNotCollected;
+    recordGame.value.echange += echangeNotCollected;
+    recordGame.value.money += moneyNotCollected;
+    recordGame.value.score += 1000*pointNotCollected
+
     line?.classList.add('removeLine');
     setTimeout(function () {
       recordGame.value.game!.splice(item.indexLigne,1);
@@ -194,11 +269,38 @@ const removingLine=(item:Case) : boolean =>{
 }
 
 const activeCase = (item : Case) : void => {
-  const possibilityCase = [possibility.value?.left, possibility.value?.right, possibility.value?.top, possibility.value?.bottom]
+  if(echangeMode.value){
+    // console.log(tabNumberExchange.length)
+    if(tabNumberExchange.value.length<2){
+      item.isOnEchangeMode= true
+      tabNumberExchange.value.push(item)
+    }
+
+    if(tabNumberExchange.value.length === 2){
+      const chiffre1 = tabNumberExchange.value[0].number
+      const chiffre2 = tabNumberExchange.value[1].number
+      tabNumberExchange.value[0].number = chiffre2
+      tabNumberExchange.value[0].isOnEchangeMode = false
+      tabNumberExchange.value[1].number = chiffre1
+      tabNumberExchange.value[1].isOnEchangeMode = false
+      tabNumberExchange.value = []
+      echangeMode.value = !echangeMode.value
+      recordGame.value.echange -=1
+      recordGame.value.echangeUsed +=1
+      save()
+
+    }
   
-  if(caseSelected1.value){
-    const itemIsInPossibility : number = possibilityCase.indexOf(item);
-    
+
+  }else{
+
+
+
+    const possibilityCase = [possibility.value?.left, possibility.value?.right, possibility.value?.top, possibility.value?.bottom]
+  
+    if(caseSelected1.value){
+      const itemIsInPossibility : number = possibilityCase.indexOf(item);
+      
       if(itemIsInPossibility !== -1 && (caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number)){
         playAudio('pop'); 
         recordGame.value.destroyeCases += 2   
@@ -239,23 +341,29 @@ const activeCase = (item : Case) : void => {
           caseSelected1.value.active = true;
           allNearCase(caseSelected1.value);
         }
-      
       }
-  }else{
-    if(item.visible){
-      item.active = true
-      if(!caseSelected1.value){
-        playAudio('select')
-        allNearCase(item);
-        caseSelected1.value = item
+    }else{
+      if(item.visible){
+        item.active = true
+        if(!caseSelected1.value){
+          playAudio('select')
+          allNearCase(item);
+          caseSelected1.value = item
+        }
       }
     }
+
   }
 }
 
 const chargeAudio = () => {
-  const audio = new Audio(require(`@/assets/pop.mp3`));
-  audio.load()
+  new Audio(require(`@/assets/pop.mp3`)).load();
+  new Audio(require(`@/assets/getBonus.mp3`)).load();
+  new Audio(require(`@/assets/negative.mp3`)).load();
+  new Audio(require(`@/assets/plic.mp3`)).load();
+  new Audio(require(`@/assets/removeline.mp3`)).load();
+  new Audio(require(`@/assets/select.mp3`)).load();
+  new Audio(require(`@/assets/selectLamp.mp3`)).load();
 }
 
 const playAudio = async (name:string) : Promise<void> => {
@@ -274,7 +382,6 @@ const handleOpenPopupOptions = () : void => {
 
 const handleChangeVolume = (e:number): void => {
   recordGame.value.UserOptions.sound = e
-  console.log(recordGame.value.UserOptions.sound)
 }
 const handleClosePopupSettings = (e:any): void => {
   openPopupOptions.value = false
@@ -291,7 +398,7 @@ const handleAddLine = () : void => {
   if(recordGame.value.game!.length + recordGame.value.game!.length/3 < maxLine){
     const valueScroll = recordGame.value.game!.length; 
     lastSelectedColor.value = color[indexColor];
-    const newLine : Case[][] = getColonne(10, recordGame.value.game!.length/3, color[indexColor]);
+    const newLine : Case[][] = getColonne(defaultTotalCase, recordGame.value.game!.length/3, color[indexColor]);
 
     newLine.forEach(e=>{
       recordGame.value.game!.push(e);
@@ -314,7 +421,7 @@ const handleAddLine = () : void => {
 
 const handlePopupRecommencerChoice = (e:string) :void => {
   if(e === 'oui'){
-      createGame(10,7);
+      createGame(defaultTotalCase,7);
       recordGame.value.lampSoluces = [];
       recordGame.value.destroyeCases = 0;
       recordGame.value.destroyeLines = 0;
@@ -330,20 +437,26 @@ const handleChangeColor = (e:{type:string, colorChoice:string}):void =>{
     case 'background' :
       document.documentElement.style.setProperty('--main-color-background', e.colorChoice);
       recordGame.value.UserOptions.optionColors.backgroundColor = e.colorChoice;
-      console.log('background')
       break
     case 'second-color-background' : 
       document.documentElement.style.setProperty('--second-color-background', e.colorChoice);
       recordGame.value.UserOptions.optionColors.secondColorBackground = e.colorChoice;
-      console.log('middle-background')
       break
     case 'text-color':
-    document.documentElement.style.setProperty('--text-color', e.colorChoice);
-    recordGame.value.UserOptions.optionColors.textColor = e.colorChoice;
+      document.documentElement.style.setProperty('--text-color', e.colorChoice);
+      recordGame.value.UserOptions.optionColors.textColor = e.colorChoice;
+      break
     case 'scroll-bar':
-    document.documentElement.style.setProperty('--scroll-bar', e.colorChoice);
-    recordGame.value.UserOptions.optionColors.scroll = e.colorChoice;
+      document.documentElement.style.setProperty('--scroll-bar', e.colorChoice);
+      recordGame.value.UserOptions.optionColors.scroll = e.colorChoice;
+      break
   }
+}
+
+const handleStopEchange = () => {
+  echangeMode.value = !echangeMode.value
+  tabNumberExchange.value.forEach(e=>e.isOnEchangeMode = false)
+  tabNumberExchange.value = []
 }
 
 const save = () : void => {
@@ -381,7 +494,7 @@ const useLamp = () => {
 
       caseGame += 1
 
-      if(caseGame === 10){
+      if(caseGame === defaultTotalCase){
         caseGame = 0
         ligne += 1
       }
@@ -389,7 +502,7 @@ const useLamp = () => {
         ligne = 0
       }
 
-      if(caseGame === 9 && ligne === recordGame.value.game!.length -1){
+      if(caseGame === defaultTotalCase-1 && ligne === recordGame.value.game!.length -1){
         parcourtSoluce += 1
       }
 
@@ -400,6 +513,12 @@ const useLamp = () => {
     }
   }
   
+}
+
+const activeEchangeMode = () => {
+  if(recordGame.value.echange >0){
+    echangeMode.value = !echangeMode.value
+  }
 }
 
 const getNextCase = (item : Case | undefined ) => {
@@ -455,6 +574,7 @@ const getSoluce = ( item : Case ) => {
   return response 
 }
 
+
 const scrollTop = () => {
   window.scroll({top:0, behavior:'smooth'})
 }
@@ -467,81 +587,29 @@ const scrollBottom = () => {
 }
 
 onMounted(() => {
-  const defaultGame = DefaultRecordGame
-  console.log(defaultGame)
+
     const getLocalStorage = localStorage.getItem('numberzilla');
     chargeAudio()
-    // document.documentElement.style.setProperty('--main-color-background', "#21163B");
+
     if(getLocalStorage){
       const gameParse = JSON.parse(getLocalStorage);
-      console.log(gameParse._value)
-
-      try{
-        recordGame.value.game = gameParse._value.game;
-      }catch(e){
-        createGame(10,7);
+      const validGame = isValidGame(gameParse._value);
+      recordGame.value = matchJson(gameParse._value, validGame)
+      if(!validGame){
+        createGame(defaultTotalCase,7);
+      }else{
+        recordGame.value.game = validGame as Case[][];   
       }
-      
-      if(gameParse._value.score){
-        recordGame.value.score = gameParse._value.score
-      }
-
-      if(gameParse._value.lamp){
-        recordGame.value.lamp = gameParse._value.lamp;
-      }
-
-      if(gameParse._value.lampSoluces){
-        recordGame.value.lampSoluces = gameParse._value.lampSoluces;
-      }
-
-      if(gameParse._value.UserOptions && gameParse._value.UserOptions.sound){
-        recordGame.value.UserOptions.sound = gameParse._value.UserOptions.sound;
-      }
-
-      if(gameParse._value.lampUsed){
-        recordGame.value.lampUsed = gameParse._value.lampUsed;
-      }
-      
-      if( gameParse._value.destroyeLines){
-        recordGame.value.destroyeLines = gameParse._value.destroyeLines
-      }
-
-      if( gameParse._value.destroyeCases){
-        recordGame.value.destroyeCases = gameParse._value.destroyeCases
-      }
-
-      if(gameParse._value.UserOptions.optionColors){
-        if(gameParse._value.UserOptions.optionColors.backgroundColor){
-          recordGame.value.UserOptions.optionColors.backgroundColor =  gameParse._value.UserOptions.optionColors.backgroundColor
-        }
-        if(gameParse._value.UserOptions.optionColors.secondColorBackground){
-          recordGame.value.UserOptions.optionColors.secondColorBackground =  gameParse._value.UserOptions.optionColors.secondColorBackground
-        }
-        if(gameParse._value.UserOptions.optionColors.scroll){
-          recordGame.value.UserOptions.optionColors.scroll =  gameParse._value.UserOptions.optionColors.scroll
-        }
-        if(gameParse._value.UserOptions.optionColors.textColor){
-          recordGame.value.UserOptions.optionColors.textColor =  gameParse._value.UserOptions.optionColors.textColor
-        }
-
-      }
-     
-
+      save()
       const tailleTableau = recordGame.value.game!.length-1;
-      lastSelectedColor.value = recordGame.value.game![tailleTableau][9].color;
+      lastSelectedColor.value = recordGame.value.game![tailleTableau][defaultTotalCase - 1].color;
       canUseLamp.value = recordGame.value.lampSoluces.length > 0? false : true;
-      console.log(recordGame.value)
-    }
-    else{
-      createGame(10,7);
-         
-    }
-
-    document.documentElement.style.setProperty('--main-color-background', recordGame.value.UserOptions.optionColors.backgroundColor);
-    document.documentElement.style.setProperty('--second-color-background', recordGame.value.UserOptions.optionColors.secondColorBackground);
-    document.documentElement.style.setProperty('--scroll-bar', recordGame.value.UserOptions.optionColors.scroll);    
-    document.documentElement.style.setProperty('--text-color', recordGame.value.UserOptions.optionColors.textColor); 
+      assignPropertieColor(recordGame.value.UserOptions.optionColors);
     
+    }else{
+      createGame(defaultTotalCase,7);
+      save()
+    }
 })
 </script>
 

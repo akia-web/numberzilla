@@ -1,5 +1,6 @@
 import {Case} from "@/types/case"
 import {GameRecord} from "@/types/gameRecord"
+import { defaultTotalCase } from "@/data/default-record-game";
 
 export const findRightCase = (item : Case, recordGame: GameRecord ) : Case | undefined => {
     let rightFind = false;
@@ -9,16 +10,16 @@ export const findRightCase = (item : Case, recordGame: GameRecord ) : Case | und
     let parcourt = 0;
   
     while(!rightFind){
-      if(caseTableau === 10 && ligne === recordGame.game!.length - 1 && parcourt === 0){
+      if(caseTableau === defaultTotalCase && ligne === recordGame.game!.length - 1 && parcourt === 0){
         parcourt = 1;
         caseTableau = 0;
         ligne = 0;
-      }else if(caseTableau === 10 && ligne < recordGame.game!.length){
+      }else if(caseTableau === defaultTotalCase && ligne < recordGame.game!.length){
         caseTableau = 0;
         ligne += 1;
       }
   
-      if(caseTableau === 10 && ligne === recordGame.game!.length - 1 && parcourt === 1){
+      if(caseTableau === defaultTotalCase && ligne === recordGame.game!.length - 1 && parcourt === 1){
         result = undefined;
         break;
       }
@@ -53,11 +54,11 @@ export const findRightCase = (item : Case, recordGame: GameRecord ) : Case | und
     
      while(!leftFind){
       if(caseTableau === -1 && ligne === 0){
-        caseTableau = 9;
+        caseTableau = defaultTotalCase - 1;
         ligne = recordGame.game!.length - 1;
       }else if(caseTableau === 0 && ligne === 0 && parcourt === 0){
         parcourt = 1;
-        caseTableau = 9;
+        caseTableau = defaultTotalCase - 1;
         ligne = recordGame.game!.length - 1;
   
       }
@@ -73,7 +74,7 @@ export const findRightCase = (item : Case, recordGame: GameRecord ) : Case | und
           break
         }
       }
-      caseTableau = 9
+      caseTableau = defaultTotalCase - 1
       if(ligne === 0){
         ligne = recordGame.game!.length-1
       }else{

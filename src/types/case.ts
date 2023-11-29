@@ -7,5 +7,6 @@ export interface Case {
     proposal : boolean,
     color: string,
     item: string,
-    soluce: boolean
+    soluce: boolean,
+    isOnEchangeMode: boolean
 }
