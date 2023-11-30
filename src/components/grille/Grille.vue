@@ -242,7 +242,7 @@ const activeCase = (item : Case) : void => {
         if(caseSelected1.value.indexLigne !== item.indexLigne){
           setTimeout(function () {
             removingLine(item);
-          },suppressLine1? 103 : 0)
+          },suppressLine1? 103 : 0);
         }
         caseSelected1.value = null;
         save();
