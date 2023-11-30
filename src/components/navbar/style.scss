@@ -1,0 +1,26 @@
+.score{
+    background-color: var(--main-color-background);
+    padding: 5px;
+    border-radius: 10px;
+    color: var(--text-color)
+}
+
+.header{
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 90px;
+    color:var(--text-color);
+    background-color: var(--second-color-background);
+    z-index: 2;
+}
+
+.symbole{
+    border-radius: 20px;
+    padding: 5px;
+    transition: 0.2s ease-in-out;
+}
+
+.symbole:hover{
+    background-color: var(--main-color-background);
+}

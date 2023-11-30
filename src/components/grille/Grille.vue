@@ -1,26 +1,14 @@
 <template>
-  <div class="header display-flex justify-center">
-    <div class=" display-flex align-item-center justify-center">
-      <div class="score display-flex align-item-center mr-nav-bar">
-        <span class="material-symbols-outlined mr-10px">kid_star</span> 
-        <span class="mr-1">{{ formatNumber(recordGame.score)  }}</span>
-        <span class="material-symbols-outlined mr-10px">payments</span>
-        <span class="mr-10px">{{formatNumber(recordGame.money)}}</span> 
-      </div>
-      <span class="material-symbols-outlined mr-nav-bar symbole">trending_up</span>
-      <span class="material-symbols-outlined mr-nav-bar symbole display-block-to-none" 
-        @click="openPopupStatistiques = !openPopupStatistiques">
-        menu_book
-      </span>
-      <span class="material-symbols-outlined mr-nav-bar symbole" @click="openPopupOptions = !openPopupOptions">settings</span>
-      <span class="material-symbols-outlined mr-nav-bar symbole">shopping_cart</span>
-      <span class="material-symbols-outlined symbole" @click="scrollTop()">vertical_align_top</span>
-      <span class="material-symbols-outlined symbole" @click="scrollBottom()">vertical_align_bottom</span>
-    </div>
-    <div class="display-flex">
- 
-    </div>
-  </div>
+
+    <Navbar2
+    :score="recordGame.score"
+    :money="recordGame.money"
+    @scroll-top="scrollTop"
+    @scroll-bottom="scrollBottom"
+    @open-popup-statistiques = handleOpenPopupStatistique
+    @open-popup-options = handleOpenPopupOptions
+    ></Navbar2>
+
 
   <div class="display-flex row-to-column justify-center align-item-center mt-3 padding-top">
     <div class="left-right">
@@ -119,6 +107,7 @@ import PopupRecommencer from '@/components/popup/popup-recommencer/popup-recomme
 import PopupOptions from '@/components/popup/popup-options/popup-options.vue'
 import PopupStatistiques from '@/components/popup/popup-statistiques/popup-statistiques.vue'
 import Statistiques from '@/components/statistiques/statistiques.vue'
+import Navbar2 from '@/components/navbar/navbar.vue'
 import {DefaultRecordGame, defaultTotalCase} from '@/data/default-record-game'
 import { formatNumber } from '@/functions/formats';
 import { assignPropertieColor, isValidGame, matchJson } from '@/functions/valid-game';
@@ -270,7 +259,6 @@ const removingLine=(item:Case) : boolean =>{
 
 const activeCase = (item : Case) : void => {
   if(echangeMode.value){
-    // console.log(tabNumberExchange.length)
     if(tabNumberExchange.value.length<2){
       item.isOnEchangeMode= true
       tabNumberExchange.value.push(item)
@@ -288,14 +276,8 @@ const activeCase = (item : Case) : void => {
       recordGame.value.echange -=1
       recordGame.value.echangeUsed +=1
       save()
-
     }
-  
-
   }else{
-
-
-
     const possibilityCase = [possibility.value?.left, possibility.value?.right, possibility.value?.top, possibility.value?.bottom]
   
     if(caseSelected1.value){
@@ -377,7 +359,7 @@ const handleOpenPopupRecommencer = () : void => {
 }
 
 const handleOpenPopupOptions = () : void => {
-  openPopupOptions.value = true
+  openPopupOptions.value = !openPopupOptions.value;
 }
 
 const handleChangeVolume = (e:number): void => {
@@ -426,6 +408,7 @@ const handlePopupRecommencerChoice = (e:string) :void => {
       recordGame.value.destroyeCases = 0;
       recordGame.value.destroyeLines = 0;
       recordGame.value.lampUsed = 0;
+      recordGame.value.echangeUsed = 0;
       save();
   }
   openPopupRecommencer.value = false;
@@ -451,6 +434,10 @@ const handleChangeColor = (e:{type:string, colorChoice:string}):void =>{
       recordGame.value.UserOptions.optionColors.scroll = e.colorChoice;
       break
   }
+}
+
+const handleOpenPopupStatistique = () :void =>{
+  openPopupStatistiques.value = !openPopupStatistiques.value;
 }
 
 const handleStopEchange = () => {
@@ -487,6 +474,7 @@ const useLamp = () => {
         recordGame.value.lampUsed += 1
         const element = document.getElementById(`case-${recordGame.value.lampSoluces[1].indexLigne}-${recordGame.value.lampSoluces[1].indexColonne}`)
         element?.scrollIntoView({ behavior: 'smooth' })
+        window.scrollBy(0, -90);
         canUseLamp.value = false;
         save()
         break
