@@ -14,6 +14,7 @@ export const findRightCase = (item : Case, recordGame: GameRecord ) : Case | und
         parcourt = 1;
         caseTableau = 0;
         ligne = 0;
+        
       }else if(caseTableau === defaultTotalCase && ligne < recordGame.game!.length){
         caseTableau = 0;
         ligne += 1;

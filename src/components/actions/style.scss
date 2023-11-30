@@ -33,6 +33,11 @@
     cursor: pointer;
 }
 
+.no-active{
+    color:lightgray;
+    cursor: not-allowed;
+}
+
 .symbole{
     font-size: 34px
 }
@@ -41,24 +46,9 @@
     color:var(--scroll-bar)
 }
 
-
-svg{
-    fill: white;
-    width: 30px;
-    transition: 0.2s ease-in-out;
-    cursor: pointer;
-}
-svg:hover{
-    fill: #ff35a0
-}
-
 .icone-disabled{
-    fill: lightgray;
+    filter: grayscale(1);
     cursor:not-allowed;
-}
-
-.icone-disabled:hover{
-    fill: lightgray; 
 }
 
 .small-svg{

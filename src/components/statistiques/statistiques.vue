@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts">
-    import { defineEmits , ref} from 'vue';
     import {formatNumber} from '@/functions/formats'
     const props = defineProps<{
     lines: number,
@@ -30,7 +29,7 @@
     destroyeCases: number,
     lampUsed: number,
     echangeUsed: number
-    }>()
+    }>();
  
 </script>
 

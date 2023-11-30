@@ -2,11 +2,15 @@
     <div class="fond">
         <div class="container-popup container-popup-options-height">
             <div class="popup">
-                <header>
+                <header class="header-popup display-flex justify-space-between align-item-center">
                     <h1>Statistiques de la partie</h1>
-                    <span class="material-symbols-outlined symbole" @click="close()">cancel</span>
+                    <span 
+                        class="material-symbols-outlined symbole cursor-pointer" 
+                        @click="close()">
+                        cancel
+                    </span>
                 </header>
-                <main>
+                <main class="main-popup">
                     <p>Nombre de lignes : {{formatNumber(props.lines)}} </p>
                     <br>
                     <hr>
@@ -30,7 +34,7 @@
     </div>
 </template>
 <script lang="ts" setup>
-    import { defineEmits , ref} from 'vue';
+    import { defineEmits} from 'vue';
     import {formatNumber} from '@/functions/formats'
     const props = defineProps<{
     lines: number,
@@ -40,7 +44,7 @@
     echangeUsed: number
     }>()
     const emit = defineEmits();
-    const close = () =>{
+    const close = () :void =>{
         emit('close-popup-statistiques');
     }
 </script>
