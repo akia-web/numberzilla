@@ -68,7 +68,7 @@
         :can-use-lamp="canUseLamp"
         :echange="recordGame.echange"
         :echangeMode="echangeMode"
-        :volume="recordGame.UserOptions.sound"
+        :volume="Number(recordGame.UserOptions.sound)"
         :tableauLenght="recordGame.game.length"
         :gameMaxLines = "maxLine"
       />
@@ -118,16 +118,16 @@ import {getColonne} from './grilleService'
 import {EnumPopupRestartChoice} from '@/types/Enum/popupRestartChoice'
 const recordGame = ref<GameRecord>(DefaultRecordGame);
 const caseSelected1 = ref<Case | null>(null);
-let possibility = ref<NearCase|null>(null);
-let lastSelectedColor = ref<string>('white');
-let openPopupRestart = ref<boolean>(false);
-let openPopupOptions = ref<boolean>(false);
-let openPopupStatistiques = ref<boolean>(false);
-let canUseLamp = ref<boolean>(true);
-let echangeMode = ref<boolean>(false);
+const possibility = ref<NearCase|null>(null);
+const lastSelectedColor = ref<string>('white');
+const openPopupRestart = ref<boolean>(false);
+const openPopupOptions = ref<boolean>(false);
+const openPopupStatistiques = ref<boolean>(false);
+const canUseLamp = ref<boolean>(true);
+const echangeMode = ref<boolean>(false);
 const maxLine : number = 300;
 
-let tabNumberExchange = ref<Case[]>([])
+const tabNumberExchange = ref<Case[]>([])
 
 const color: string[] = ['purple', 'pink', 'green', 'yellow', 'white'];
 
@@ -213,6 +213,8 @@ const removingLine=(item:Case) : boolean =>{
 
 const activeCase = (item : Case) : void => {
   if(!echangeMode.value){
+   
+    removePossibilityProposal();
     if(item.visible && !caseSelected1.value){
       item.active = true;
       playAudio('select', recordGame.value.UserOptions.sound);
@@ -260,6 +262,25 @@ const activeCase = (item : Case) : void => {
   }
 }
 
+const removePossibilityProposal = () : void => {
+  if(possibility.value){
+      if(possibility.value.bottom){
+        possibility.value.bottom.proposal = false;
+      }
+      
+      if(possibility.value.top){
+        possibility.value.top.proposal = false;
+      }
+      
+      if(possibility.value.left){
+        possibility.value.left.proposal = false;
+      }
+
+      if(possibility.value.right){
+        possibility.value.right.proposal = false;
+      }
+    }
+}
 
 const removeSoluceItem = (item: Case) => {
   if(item.soluce || caseSelected1.value!.soluce){
@@ -270,6 +291,7 @@ const removeSoluceItem = (item: Case) => {
     canUseLamp.value = true 
   }
 }
+
 const echangeCase = (item:Case) =>{
   if(tabNumberExchange.value.length<2){
       item.isOnEchangeMode= true;
@@ -290,9 +312,6 @@ const echangeCase = (item:Case) =>{
       save()
     }
 }
-
-
-
 
 const chargeAudio = () => {
   new Audio(require(`@/assets/pop.mp3`)).load();
