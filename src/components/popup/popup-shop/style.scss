@@ -1,0 +1,32 @@
+.card{
+    border: 2px solid var(--second-color-background);
+    width: 45%;
+    border-radius: 10px;
+}
+
+.container-prix{
+    background-color: var(--main-color-background);
+    padding: 5px;
+    border-radius: 10px;
+    width: 80%;
+    transition: 0.2s ease-in-out;
+}
+
+.container-prix:hover{
+    background-color: var(--second-color-background);
+}
+
+.logo-item-entete{
+    position: absolute;
+    transform: translate(-50%, -50%);
+    background-color: #F0EDF3;
+    border: 2px solid var(--second-color-background);
+    border-radius: 50%;
+    top:-6px;
+    left: 50%;
+    font-size: 30px;
+}
+
+.main-popup{
+    padding: 0;
+}

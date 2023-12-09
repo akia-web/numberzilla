@@ -27,7 +27,7 @@
                 </span>
                 <span 
                     class="material-symbols-outlined mr-nav-bar symbole display-block-to-none" 
-                    @click="emitMessage('open-popup-statistiques')">
+                    @click="emitMessage('close-open-popup','statistics')">
                     trending_up
                 </span>
                 <span 
@@ -36,21 +36,22 @@
                 </span>
                 <span 
                     class="material-symbols-outlined mr-nav-bar symbole" 
-                    @click="emitMessage('open-popup-options')">
+                    @click="emitMessage('close-open-popup','options')">
                     settings
                 </span>
                 <span 
-                    class="material-symbols-outlined mr-nav-bar symbole">
+                    class="material-symbols-outlined mr-nav-bar symbole"
+                    @click="emitMessage('close-open-popup','shop')">
                     shopping_cart
                 </span>
                 <span 
                     class="material-symbols-outlined symbole" 
-                    @click="emitMessage('scroll-top')">
+                    @click="emitMessage('scroll','top')">
                     vertical_align_top
                 </span>
                 <span 
                     class="material-symbols-outlined symbole" 
-                    @click="emitMessage('scroll-bottom')">
+                    @click="emitMessage('scroll','bottom')">
                     vertical_align_bottom
                 </span>
             </div>
@@ -67,8 +68,8 @@
     }>()
 
     const emit = defineEmits();
-    const emitMessage = (message: string) =>{
-        emit(message);
+    const emitMessage = (message: string, item: string) =>{
+        emit(message, item);
     }
 </script>
 <style scoped src="./style.scss" lang="scss"></style>

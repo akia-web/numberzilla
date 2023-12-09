@@ -23,8 +23,19 @@
         left: 70%;
     }
 }
+
+.container-bonus{
+    position: relative;
+}
 .number-item {
-    color: yellow
+    position: absolute;
+    color: var(--text-color);
+    background-color: var(--scroll-bar);
+    bottom: 1px;
+    right: -4px;
+    padding: 2px;
+    border-radius: 50%;
+    font-size: 11px;
 }
 
 .lamp, .symbole{

@@ -3,10 +3,8 @@
     <Navbar2
     :score="recordGame.score"
     :money="recordGame.money"
-    @scroll-top="scrollTop"
-    @scroll-bottom="scrollBottom"
-    @open-popup-statistiques = handleOpenPopupStatistique
-    @open-popup-options = handleOpenPopupOptions
+    @scroll="scrollPage"
+    @close-open-popup = "handlePopup"
     ></Navbar2>
 
 
@@ -25,7 +23,7 @@
       <div v-for="(item, index) in recordGame.game" :key="index" 
       class="container-ligne display-flex justify-space-between" 
       :id="'ligne-'+index">
-        <!-- 'proposal': bidule.proposal -->
+        <!-- 'proposal': caseLine.proposal -->
         <p 
           v-for="caseLine in item" 
           :key="caseLine.indexColonne"
@@ -44,9 +42,7 @@
           </span>
 
           <span v-if="!caseLine.visible && caseLine.item==='echanger'"
-          class="material-symbols-outlined item item-case" @click="getItem(caseLine)">
-            swap_horiz
-          </span>
+          class="item" @click="getItem(caseLine)">✨</span>
 
           <span v-if="!caseLine.visible && caseLine.item==='1000pts'"
           class="point" @click="getItem(caseLine)">
@@ -59,7 +55,6 @@
     <div class="left-right">
       <Action 
         @open-popup-recommencer="handleOpenPopupRestart" 
-        @open-popup-options="handleOpenPopupOptions" 
         @addLine="handleAddLine"  
         @useLamp="useLamp" 
         @useEchange="activeEchangeMode"
@@ -96,6 +91,13 @@
       @close-popup-statistiques="openPopupStatistiques = !openPopupStatistiques"
       ></PopupStatistiques>
 
+      <PopupShop
+      v-if="openPopupShop"  
+      :money="recordGame.money"
+      @pay-bonus="handlePayBonus" 
+      @close-open-popup="handlePopup"
+      ></PopupShop>
+
   </div>
 </template>
 
@@ -104,32 +106,35 @@ import { ref, onMounted } from 'vue';
 import {Case} from "@/types/case"
 import {NearCase} from "@/types/nearCase"
 import {GameRecord} from "@/types/gameRecord"
-import {findRightCase, findLeftCase, findbottomCase, findTopCase} from "@/functions/findCase"
+import {findRightCase, findLeftCase, findbottomCase, findTopCase, getNextCase} from "@/functions/findCase"
 import Action from '@/components/actions/Actions.vue'
 import PopupRestart from '@/components/popup/popup-restart/popup-restart.vue'
 import PopupOptions from '@/components/popup/popup-options/popup-options.vue'
+import PopupShop from '@/components/popup/popup-shop/popup-shop.vue'
 import PopupStatistiques from '@/components/popup/popup-statistiques/popup-statistiques.vue'
 import Statistiques from '@/components/statistiques/statistiques.vue'
 import Navbar2 from '@/components/navbar/navbar.vue'
 import {DefaultRecordGame, defaultTotalCase} from '@/data/default-record-game'
 import {assignPropertieColor, isValidGame, matchJson } from '@/functions/valid-game';
-import {playAudio} from '@/functions/audio'
-import {getColonne} from './grilleService'
+import {playAudio, chargeAudio} from '@/functions/audio'
+import { getColonne, newIndexColor, replaceIndexGame, searchSoluce, allNearCase} from './grilleService'
 import {EnumPopupRestartChoice} from '@/types/Enum/popupRestartChoice'
+import {scrollPage} from '@/functions/scroll-page'
+import { color } from '@/data/default-color';
+import { getSoluceDto } from './dto/get-soluce-dto';
 const recordGame = ref<GameRecord>(DefaultRecordGame);
 const caseSelected1 = ref<Case | null>(null);
 const possibility = ref<NearCase|null>(null);
 const lastSelectedColor = ref<string>('white');
 const openPopupRestart = ref<boolean>(false);
 const openPopupOptions = ref<boolean>(false);
+const openPopupShop = ref<boolean>(false);
 const openPopupStatistiques = ref<boolean>(false);
 const canUseLamp = ref<boolean>(true);
 const echangeMode = ref<boolean>(false);
 const maxLine : number = 300;
 
 const tabNumberExchange = ref<Case[]>([])
-
-const color: string[] = ['purple', 'pink', 'green', 'yellow', 'white'];
 
 const createGame = (colonne: number, ligne: number) : void => {
   recordGame.value.game = getColonne(colonne, ligne, color[4]);
@@ -152,14 +157,14 @@ const getItem = (item: Case) : void => {
   save();
 }
 
-const allNearCase= (item: Case) : void =>{
-  let result : NearCase = {};
-  result.right = findRightCase(item, recordGame.value);
-  result.left = findLeftCase(item, recordGame.value);
-  result.top = findTopCase(item, recordGame.value);
-  result.bottom = findbottomCase(item, recordGame.value)
-  possibility.value = result;
-}
+// const allNearCase= (item: Case) : void =>{
+//   let result : NearCase = {};
+//   result.right = findRightCase(item, recordGame.value);
+//   result.left = findLeftCase(item, recordGame.value);
+//   result.top = findTopCase(item, recordGame.value);
+//   result.bottom = findbottomCase(item, recordGame.value)
+//   possibility.value = result;
+// }
 
 const removingLine=(item:Case) : boolean =>{
   const line : Element | null = document.querySelector(`#ligne-${item.indexLigne}`);
@@ -218,7 +223,7 @@ const activeCase = (item : Case) : void => {
     if(item.visible && !caseSelected1.value){
       item.active = true;
       playAudio('select', recordGame.value.UserOptions.sound);
-      allNearCase(item);
+      possibility.value = allNearCase(item, recordGame.value.game);
       caseSelected1.value = item;
       return
     }
@@ -229,6 +234,8 @@ const activeCase = (item : Case) : void => {
       
       if(itemIsInPossibility !== -1 && (caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number)){
         playAudio('pop', recordGame.value.UserOptions.sound); 
+        item.proposal = false;
+        caseSelected1.value.proposal = false;
         recordGame.value.destroyeCases += 2   
         caseSelected1.value.visible = false;
         item.visible = false;
@@ -253,7 +260,7 @@ const activeCase = (item : Case) : void => {
           caseSelected1.value.active = false;
           item.active = true;
           caseSelected1.value = item;
-          allNearCase(caseSelected1.value);
+          possibility.value =  allNearCase(caseSelected1.value, recordGame.value.game);
         }
     }
     
@@ -287,6 +294,7 @@ const removeSoluceItem = (item: Case) => {
     recordGame.value.lampSoluces.forEach(e=>{
       recordGame.value.game![e.indexLigne][e.indexColonne].soluce = false
     })
+    
     recordGame.value.lampSoluces= []
     canUseLamp.value = true 
   }
@@ -313,22 +321,8 @@ const echangeCase = (item:Case) =>{
     }
 }
 
-const chargeAudio = () => {
-  new Audio(require(`@/assets/pop.mp3`)).load();
-  new Audio(require(`@/assets/getBonus.mp3`)).load();
-  new Audio(require(`@/assets/negative.mp3`)).load();
-  new Audio(require(`@/assets/plic.mp3`)).load();
-  new Audio(require(`@/assets/removeline.mp3`)).load();
-  new Audio(require(`@/assets/select.mp3`)).load();
-  new Audio(require(`@/assets/selectLamp.mp3`)).load();
-}
-
 const handleOpenPopupRestart = () : void => {
   openPopupRestart.value = !openPopupRestart.value;
-}
-
-const handleOpenPopupOptions = () : void => {
-  openPopupOptions.value = !openPopupOptions.value;
 }
 
 const handleChangeVolume = (e:number): void => {
@@ -340,12 +334,26 @@ const handleClosePopupSettings = (): void => {
   save();
 }
 
-const handleAddLine = () : void => {
-  let indexColor: number = Math.floor(Math.random() * 5);
-
-  while(indexColor === color.indexOf(lastSelectedColor.value)){
-    indexColor = Math.floor(Math.random() * 5);
+const handlePopup = (e:any):void =>{
+  switch (e){
+    case 'statistics':
+      openPopupStatistiques.value = !openPopupStatistiques.value;
+      break
+    case 'shop':
+      openPopupShop.value = !openPopupShop.value;
+      break
+    case 'options':
+      openPopupOptions.value = !openPopupOptions.value;
+      break
   }
+}
+
+const handleAddLine = () : void => {
+  if(recordGame.value.lamp >0){
+    canUseLamp.value = true;
+  }
+  
+  let indexColor: number = newIndexColor(lastSelectedColor.value);
 
   if(recordGame.value.game!.length + recordGame.value.game!.length/3 < maxLine){
     const valueScroll = recordGame.value.game!.length; 
@@ -357,16 +365,10 @@ const handleAddLine = () : void => {
     })
 
     playAudio('plic', recordGame.value.UserOptions.sound);
-
-    for(let i: number = 0; i < recordGame.value.game!.length; i++){
-      recordGame.value.game![i].forEach(e=>{
-        e.indexLigne = i;
-      })
-    }
-
-    const element = document.getElementById(`case-${valueScroll-1}-0`);
-    element?.scrollIntoView({ behavior: 'smooth' });
+    recordGame.value.game = replaceIndexGame(recordGame.value.game);
+    document.getElementById(`case-${valueScroll-1}-0`)?.scrollIntoView({ behavior: 'smooth' });
     save();
+
   }else{
     playAudio('negative', recordGame.value.UserOptions.sound);
   }
@@ -407,14 +409,29 @@ const handleChangeColor = (e:{type:string, colorChoice:string}):void =>{
   }
 }
 
-const handleOpenPopupStatistique = () :void =>{
-  openPopupStatistiques.value = !openPopupStatistiques.value;
-}
-
 const handleStopEchange = () : void => {
   echangeMode.value = !echangeMode.value;
-  tabNumberExchange.value.forEach(e=>e.isOnEchangeMode = false);
+  tabNumberExchange.value.map(e=>e.isOnEchangeMode = false);
   tabNumberExchange.value = [];
+}
+
+const handlePayBonus = (e:string): void => {
+  if(recordGame.value.money >= 5){
+    playAudio('pay', recordGame.value.UserOptions.sound);
+    switch (e){
+      case 'lamp':
+        recordGame.value.lamp += 3;
+        break
+      case 'echanges':
+        recordGame.value.echange += 3;
+        break
+    }
+    recordGame.value.money -= 5;
+    save()
+  }else{
+    playAudio('negative', recordGame.value.UserOptions.sound)
+  }
+ 
 }
 
 const save = () : void => {
@@ -428,17 +445,22 @@ const useLamp = () : void => {
     let ligne : number = 0 
     let parcourtSoluce : number = 0;
     let findSoluce : boolean = false;
+    let canActiveSoluce = false;
 
     while(!findSoluce){
-      let item = getNextCase(recordGame.value.game![ligne][caseGame]);
+      possibility.value = null;
+      let item = getNextCase(recordGame.value.game, ligne, caseGame);
       
       if(item === undefined){
         playAudio('negative', recordGame.value.UserOptions.sound);
+        canUseLamp.value = false;
         break;
       }
 
-      allNearCase (item!);
-      const isSoluceFind : boolean = getSoluce(item!);
+      possibility.value = allNearCase (item!, recordGame.value.game);
+      const searchSoluceDto: getSoluceDto = searchSoluce(item!, possibility.value)
+      recordGame.value.lampSoluces = searchSoluceDto.lampSoluces;
+      const isSoluceFind : boolean = searchSoluceDto.response;
 
       if(isSoluceFind){
         activeSoluce();
@@ -461,18 +483,20 @@ const useLamp = () : void => {
 
       if(parcourtSoluce === 2){
         playAudio('negative',recordGame.value.UserOptions.sound);
+        canUseLamp.value = false;
         break;
       }
     }
   }else{
     playAudio('negative',recordGame.value.UserOptions.sound);
+    canUseLamp.value = false;
   }
 }
 
 const activeSoluce = () :void =>{
   playAudio('selectLamp', recordGame.value.UserOptions.sound);
-  recordGame.value.lamp -= 1
-  recordGame.value.lampUsed += 1
+  recordGame.value.lamp -= 1;
+  recordGame.value.lampUsed += 1;
   canUseLamp.value = false;
   const element = document.getElementById(`case-${recordGame.value.lampSoluces[1].indexLigne}-${recordGame.value.lampSoluces[1].indexColonne}`);
   let position = element?.offsetTop;
@@ -481,6 +505,13 @@ const activeSoluce = () :void =>{
     left: 0,
     behavior: "smooth",
   });
+
+  recordGame.value.game.forEach((e:Case[]) =>{
+    e.forEach((item:Case)=>{
+      if(!recordGame.value.lampSoluces.includes(item))
+      item.proposal = false;
+    })
+  })
   save();
 }
 
@@ -490,64 +521,9 @@ const activeEchangeMode = () : void => {
   }
 }
 
-const getNextCase = (item : Case | undefined ) : Case | undefined => {
-  let findItem = false;
-  let ligne = item!.indexLigne;
-  let column = item!.indexColonne;
-  while(!findItem){
-    item = recordGame.value.game![ligne][column]; 
-    if (item && item.visible){
-      return item;
-    }
-
-    column += 1;
-
-    if(column === recordGame.value.game![0].length){
-      column = 0;
-      ligne += 1;
-    }
-    if(ligne === recordGame.value.game!.length){
-      ligne = 0
-    }
-
-    if(column === 0 && ligne === 0){
-      return item = undefined;
-    }
-  }
-}
-
-const getSoluce = ( item : Case ) : boolean => {
-  let response : boolean = false;
-  if(possibility.value?.right && (possibility.value?.right?.number === item.number ||  possibility.value!.right!.number + item.number === 10)){
-    addLampSoluce(item, possibility.value!.right!); 
-      return response = true
-  }
-  
-  if(possibility.value?.top && (possibility.value?.top?.number === item.number ||  possibility.value!.top!.number + item.number === 10)){
-      addLampSoluce(item, possibility.value!.top!);
-      return response = true;
-  }
-  return response 
-}
-
-const addLampSoluce = (item : Case, possibility : Case) : void => {
-  recordGame.value.lampSoluces = [];
-  item.soluce = true;
-  possibility.soluce = true;
-  recordGame.value.lampSoluces?.push(item);
-  recordGame.value.lampSoluces?.push(possibility);
-}
-
-const scrollTop = () :void => {
-  window.scroll({top:0, behavior:'smooth'})
-}
-
-const scrollBottom = () :void => {
-  window.scroll({top: document.body.scrollHeight,behavior: 'smooth'});
-}
-
 onMounted(() => {
-
+    document.body.setAttribute('onselectstart', 'return false');
+    document.body.setAttribute('onmousedown', 'return false');
     const getLocalStorage = localStorage.getItem('numberzilla');
     chargeAudio()
 
@@ -573,5 +549,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped src="./style.scss" lang="scss">
-</style>
+<style scoped src="./style.scss" lang="scss"></style>

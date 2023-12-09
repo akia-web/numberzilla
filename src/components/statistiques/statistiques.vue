@@ -15,7 +15,7 @@
             <p>Indices utilisés : {{formatNumber(props.lampUsed)}} </p>
         </div>
         <div class="display-flex align-item-center">
-            <span class="material-symbols-outlined mr-10px">swap_horiz</span>
+            <span>✨</span>
             <p> Échanges utilisés : {{formatNumber(props.echangeUsed)}} </p>
         </div>
     </div>

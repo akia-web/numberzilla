@@ -7,3 +7,5 @@ export const DefaultColors  : UserOptionsColors = {
     textColor:'#ffffff',
 }
 
+export const color: string[] = ['purple', 'pink', 'green', 'yellow', 'white'];
+
