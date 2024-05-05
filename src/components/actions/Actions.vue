@@ -38,6 +38,7 @@ import { defineEmits } from 'vue';
     lamp : number,
     canUseLamp: boolean,
     echange:number,
+    gather: number,
     echangeMode:boolean,
     volume: number,
     tableauLenght: number,

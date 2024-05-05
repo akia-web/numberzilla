@@ -106,7 +106,7 @@ import { ref, onMounted } from 'vue';
 import {Case} from "@/types/case"
 import {NearCase} from "@/types/nearCase"
 import {GameRecord} from "@/types/gameRecord"
-import {findRightCase, findLeftCase, findbottomCase, findTopCase, getNextCase} from "@/functions/findCase"
+import {getNextCase} from "@/functions/findCase"
 import Action from '@/components/actions/Actions.vue'
 import PopupRestart from '@/components/popup/popup-restart/popup-restart.vue'
 import PopupOptions from '@/components/popup/popup-options/popup-options.vue'
@@ -116,7 +116,7 @@ import Statistiques from '@/components/statistiques/statistiques.vue'
 import Navbar2 from '@/components/navbar/navbar.vue'
 import {DefaultRecordGame, defaultTotalCase} from '@/data/default-record-game'
 import {assignPropertieColor, isValidGame, matchJson } from '@/functions/valid-game';
-import {playAudio, chargeAudio} from '@/functions/audio'
+import {playAudio} from '@/functions/audio'
 import { getColonne, newIndexColor, replaceIndexGame, searchSoluce, allNearCase} from './grilleService'
 import {EnumPopupRestartChoice} from '@/types/Enum/popupRestartChoice'
 import {scrollPage} from '@/functions/scroll-page'
@@ -143,7 +143,8 @@ const createGame = (colonne: number, ligne: number) : void => {
 }
 
 const getItem = (item: Case) : void => {
-  playAudio('getBonus',recordGame.value.UserOptions.sound);
+    playAudio('getBonus', recordGame.value.UserOptions.sound);
+
   if(item.item === 'lamp'){
     recordGame.value.lamp += 1;
   }else if(item.item === 'echanger'){
@@ -156,15 +157,6 @@ const getItem = (item: Case) : void => {
   item.item = 'none';
   save();
 }
-
-// const allNearCase= (item: Case) : void =>{
-//   let result : NearCase = {};
-//   result.right = findRightCase(item, recordGame.value);
-//   result.left = findLeftCase(item, recordGame.value);
-//   result.top = findTopCase(item, recordGame.value);
-//   result.bottom = findbottomCase(item, recordGame.value)
-//   possibility.value = result;
-// }
 
 const removingLine=(item:Case) : boolean =>{
   const line : Element | null = document.querySelector(`#ligne-${item.indexLigne}`);
@@ -222,7 +214,8 @@ const activeCase = (item : Case) : void => {
     removePossibilityProposal();
     if(item.visible && !caseSelected1.value){
       item.active = true;
-      playAudio('select', recordGame.value.UserOptions.sound);
+      playAudio('select',recordGame.value.UserOptions.sound);
+
       possibility.value = allNearCase(item, recordGame.value.game);
       caseSelected1.value = item;
       return
@@ -233,10 +226,11 @@ const activeCase = (item : Case) : void => {
       const itemIsInPossibility : number = possibilityCase.indexOf(item);
       
       if(itemIsInPossibility !== -1 && (caseSelected1.value.number + item.number === 10 || caseSelected1.value.number === item.number)){
-        playAudio('pop', recordGame.value.UserOptions.sound); 
+        playAudio('pop', recordGame.value.UserOptions.sound);
+
         item.proposal = false;
         caseSelected1.value.proposal = false;
-        recordGame.value.destroyeCases += 2   
+        recordGame.value.destroyeCases += 1   
         caseSelected1.value.visible = false;
         item.visible = false;
         recordGame.value.score += caseSelected1.value.number + item.number === 10 ?  10 : 5;
@@ -363,14 +357,13 @@ const handleAddLine = () : void => {
     newLine.forEach(e=>{
       recordGame.value.game!.push(e);
     })
-
     playAudio('plic', recordGame.value.UserOptions.sound);
     recordGame.value.game = replaceIndexGame(recordGame.value.game);
     document.getElementById(`case-${valueScroll-1}-0`)?.scrollIntoView({ behavior: 'smooth' });
     save();
 
   }else{
-    playAudio('negative', recordGame.value.UserOptions.sound);
+      playAudio('negative', recordGame.value.UserOptions.sound);
   }
 }
 
@@ -417,7 +410,9 @@ const handleStopEchange = () : void => {
 
 const handlePayBonus = (e:string): void => {
   if(recordGame.value.money >= 5){
+
     playAudio('pay', recordGame.value.UserOptions.sound);
+
     switch (e){
       case 'lamp':
         recordGame.value.lamp += 3;
@@ -429,7 +424,8 @@ const handlePayBonus = (e:string): void => {
     recordGame.value.money -= 5;
     save()
   }else{
-    playAudio('negative', recordGame.value.UserOptions.sound)
+
+    playAudio('negative', recordGame.value.UserOptions.sound);
   }
  
 }
@@ -445,7 +441,6 @@ const useLamp = () : void => {
     let ligne : number = 0 
     let parcourtSoluce : number = 0;
     let findSoluce : boolean = false;
-    let canActiveSoluce = false;
 
     while(!findSoluce){
       possibility.value = null;
@@ -482,19 +477,23 @@ const useLamp = () : void => {
       }
 
       if(parcourtSoluce === 2){
-        playAudio('negative',recordGame.value.UserOptions.sound);
+
+        playAudio('negative', recordGame.value.UserOptions.sound);
+
         canUseLamp.value = false;
         break;
       }
     }
   }else{
-    playAudio('negative',recordGame.value.UserOptions.sound);
+    playAudio('negative', recordGame.value.UserOptions.sound);
     canUseLamp.value = false;
   }
 }
 
 const activeSoluce = () :void =>{
+
   playAudio('selectLamp', recordGame.value.UserOptions.sound);
+
   recordGame.value.lamp -= 1;
   recordGame.value.lampUsed += 1;
   canUseLamp.value = false;
@@ -523,10 +522,8 @@ const activeEchangeMode = () : void => {
 
 onMounted(() => {
     document.body.setAttribute('onselectstart', 'return false');
-    document.body.setAttribute('onmousedown', 'return false');
-    const getLocalStorage = localStorage.getItem('numberzilla');
-    chargeAudio()
-
+    document.body.setAttribute('onmousedown', 'if (!(event.target.classList.contains("slider") || event.target.classList.contains("color"))) return false;');    const getLocalStorage = localStorage.getItem('numberzilla');
+    
     if(getLocalStorage){
       const gameParse = JSON.parse(getLocalStorage);
       const validGame = isValidGame(gameParse._value);

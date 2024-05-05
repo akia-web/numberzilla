@@ -8,11 +8,12 @@
   },
   "dependencies": {
     "core-js": "^3.8.3",
+    "howler": "^2.2.4",
     "vue": "^3.2.13",
-    "vue-accessible-color-picker": "^5.0.1",
     "vue-router": "^4.0.3"
   },
   "devDependencies": {
+    "@types/howler": "^2.2.11",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-router": "~5.0.0",
     "@vue/cli-plugin-typescript": "~5.0.0",

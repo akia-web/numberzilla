@@ -1,31 +1,37 @@
-export const playAudio =  (name:string, volume:number) : void => {
-    // const audio = new Audio(require(`@/assets/${name}.mp3`));
-    // audio.volume = volume;
-    // audio.play()
-    const audioCtx = new AudioContext();
-    const gainNode = audioCtx.createGain();
+const audioBonus = new Audio(require(`@/assets/getBonus.mp3`))
+const audioNegative = new Audio(require(`@/assets/negative.mp3`))
+const audioPay = new Audio(require(`@/assets/pay.mp3`))
+const audioPlic = new Audio(require(`@/assets/plic.mp3`))
+const audioPop = new Audio(require(`@/assets/pop.mp3`))
+const audioRemoveLine = new Audio(require(`@/assets/removeline.mp3`))
+const audioSelect = new Audio(require(`@/assets/select.mp3`))
+const audioSelectLamp = new Audio(require(`@/assets/selectLamp.mp3`))
 
-    import(`@/assets/${name}.mp3`)
-        .then((module) => {
-            const audio = new Audio(module.default);
-            const source = audioCtx.createMediaElementSource(audio);
-            source.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            gainNode.gain.value = volume;
-            audio.play();
-        })
-        .catch((error) => {
-            console.error('Erreur de chargement audio :', error);
-        });
-};
-
-export const chargeAudio = () => {
-  new Audio(require(`@/assets/pop.mp3`)).load();
-  new Audio(require(`@/assets/getBonus.mp3`)).load();
-  new Audio(require(`@/assets/negative.mp3`)).load();
-  new Audio(require(`@/assets/plic.mp3`)).load();
-  new Audio(require(`@/assets/removeline.mp3`)).load();
-  new Audio(require(`@/assets/select.mp3`)).load();
-  new Audio(require(`@/assets/selectLamp.mp3`)).load();
-  new Audio(require(`@/assets/pay.mp3`)).load();
+const getAudio = (name:string) => {
+    switch (name){
+        case 'getBonus':
+            return audioBonus;
+        case 'negative':
+            return audioNegative;
+        case 'pay':
+            return audioPay;
+        case 'plic':
+            return audioPlic;
+        case 'pop':
+            return audioPop;
+        case 'removeline':
+            return audioRemoveLine;
+        case 'select':
+            return audioSelect;
+        case 'selectLamp':
+            return audioSelectLamp;
+        default: 
+        return audioPop;
+    }
 }
+
+export const playAudio =  (name:string, volume: number) : void => {
+    const audio = getAudio(name)
+    audio.volume = volume;
+    audio.play();    
+};

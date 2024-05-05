@@ -103,6 +103,7 @@
         color.value.backgroundColor = DefaultColors.backgroundColor;
         color.value.secondColorBackground = DefaultColors.secondColorBackground;
         color.value.textColor = DefaultColors.textColor;
+        color.value.scroll = DefaultColors.scroll
         emit('change-color', {type: 'background', colorChoice : color.value.backgroundColor});
         emit('change-color', {type: 'second-color-background', colorChoice : color.value.secondColorBackground});  
         emit('change-color', {type: 'text-color', colorChoice : color.value.textColor});

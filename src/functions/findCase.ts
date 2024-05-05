@@ -1,10 +1,9 @@
 import {Case} from "@/types/case";
-import {GameRecord} from "@/types/gameRecord";
 import { defaultTotalCase } from "@/data/default-record-game";
 
 export const findRightCase = (
   item: Case, game: Case[][], caseTableau:number = item.indexColonne+1, ligne:number = item.indexLigne, parcourt=0
-  ) :any => {
+  ) :Case | undefined => {
   if(caseTableau === defaultTotalCase && ligne === game!.length - 1 && parcourt === 0){
     parcourt = 1;
     caseTableau = 0;
@@ -39,7 +38,7 @@ export const findRightCase = (
 
 export const findLeftCase = (
   item: Case, game: Case[][], caseTableau: number = item.indexColonne -1, ligne = item.indexLigne, parcourt = 0  
-  ) : any => {
+  ) :Case | undefined => {
     if(caseTableau === -1 && ligne === 0 && parcourt === 0){
       parcourt = 1;
       caseTableau = defaultTotalCase - 1;
@@ -69,7 +68,7 @@ export const findLeftCase = (
   
 export const findTopCase = (
   item: Case, game : Case[][], ligne:number = item.indexLigne-1, caseTableau: number = item.indexColonne
-  ) : any =>{
+  ) :Case | undefined =>{
     
     if(ligne === -1){
       return undefined;
@@ -94,7 +93,7 @@ export const findTopCase = (
 
 export const findbottomCase = (
   item : Case, game: Case[][], caseTableau: number = item.indexColonne, ligne: number = item.indexLigne+1
-  ) : any => {
+  ) :Case | undefined => {
   if(ligne === game!.length){
     return undefined;
   }
