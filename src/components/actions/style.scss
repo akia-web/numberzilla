@@ -19,16 +19,38 @@
         left: 80%;
         bottom: auto;
     }
+    @media (min-width: 1250px){ 
+        width: 250px;
+    }
     @media (min-width: 1600px){ 
+        width: 300px;
         left: 70%;
+
     }
 }
 
 .container-bonus{
     position: relative;
+    height: 36px;
 }
+.text-item{
+    font-size: 8px;
+    text-align: center;
+}
+
+.gather{
+    rotate: 140deg;
+    font-size: 20px !important;
+    margin-left: 10px
+}
+
 .number-item {
+    justify-content: center;
     position: absolute;
+    display: flex;
+    min-width: 15px;
+    align-items: center;
+    min-height: 15px;
     color: var(--text-color);
     background-color: var(--scroll-bar);
     bottom: 1px;
@@ -47,6 +69,10 @@
 .no-active{
     color:lightgray;
     cursor: not-allowed;
+}
+
+.cursor-pointer{
+    cursor: pointer;
 }
 
 .symbole{

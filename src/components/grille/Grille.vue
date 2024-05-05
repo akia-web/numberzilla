@@ -48,6 +48,11 @@
           class="point" @click="getItem(caseLine)">
             +1000
           </span>
+
+          <span v-if="!caseLine.visible && caseLine.item==='gather'"
+          class="item" @click="getItem(caseLine)">
+          🧲
+          </span>
         </p>
   
       </div>
@@ -58,10 +63,12 @@
         @addLine="handleAddLine"  
         @useLamp="useLamp" 
         @useEchange="activeEchangeMode"
+        @useGather="useGather"
         @stop-echange="handleStopEchange"
         :lamp="recordGame.lamp"
         :can-use-lamp="canUseLamp"
         :echange="recordGame.echange"
+        :gather="recordGame.gather ? recordGame.gather : 0"
         :echangeMode="echangeMode"
         :volume="Number(recordGame.UserOptions.sound)"
         :tableauLenght="recordGame.game.length"
@@ -71,6 +78,12 @@
     <PopupRestart 
       v-if="openPopupRestart" 
       @choice="handlePopupRestartChoice"
+    />
+    <PopupAlert 
+      v-if="openPopupAlert" 
+      @close-popup-alert="handlePopup('alert')"
+      :title="titleAlert"
+      :message="messageAlert"
     />
 
     <PopupOptions 
@@ -98,6 +111,11 @@
       @close-open-popup="handlePopup"
       ></PopupShop>
 
+      <PopupWin
+      v-if="openPopupWin"  
+      @choice="handlePopupRestartChoice"
+      ></PopupWin>
+
   </div>
 </template>
 
@@ -122,6 +140,9 @@ import {EnumPopupRestartChoice} from '@/types/Enum/popupRestartChoice'
 import {scrollPage} from '@/functions/scroll-page'
 import { color } from '@/data/default-color';
 import { getSoluceDto } from './dto/get-soluce-dto';
+import { defaultCaseTableau } from '@/data/default-case';
+import PopupAlert from '../popup/popup-alerte/popup-alert.vue';
+import PopupWin from '../popup/popup-win/popup-win.vue';
 const recordGame = ref<GameRecord>(DefaultRecordGame);
 const caseSelected1 = ref<Case | null>(null);
 const possibility = ref<NearCase|null>(null);
@@ -130,9 +151,13 @@ const openPopupRestart = ref<boolean>(false);
 const openPopupOptions = ref<boolean>(false);
 const openPopupShop = ref<boolean>(false);
 const openPopupStatistiques = ref<boolean>(false);
+const openPopupAlert = ref<boolean>(false);
+const openPopupWin = ref<boolean>(false)
 const canUseLamp = ref<boolean>(true);
 const echangeMode = ref<boolean>(false);
 const maxLine : number = 300;
+const titleAlert = ref<string>('');
+const messageAlert = ref<string>('');
 
 const tabNumberExchange = ref<Case[]>([])
 
@@ -153,6 +178,8 @@ const getItem = (item: Case) : void => {
     recordGame.value.money +=1;
   }else if(item.item === '1000pts'){
     recordGame.value.score +=1000;
+  }else if(item.item === 'gather'){
+    recordGame.value.gather += 1;
   }
   item.item = 'none';
   save();
@@ -165,6 +192,7 @@ const removingLine=(item:Case) : boolean =>{
   let pointNotCollected = 0;
   let moneyNotCollected = 0;
   let echangeNotCollected = 0;
+  let gatherNotCollected = 0
   recordGame.value.game![item.indexLigne].forEach((e)=>{
     if(e.item === 'lamp'){
       lampNotCollected += 1;
@@ -174,6 +202,8 @@ const removingLine=(item:Case) : boolean =>{
       pointNotCollected += 1
     }else if(e.item === 'echanger'){
       echangeNotCollected += 1
+    }else if(e.item === 'gather'){
+      gatherNotCollected += 1
     }
 
     if(e.visible){
@@ -186,6 +216,7 @@ const removingLine=(item:Case) : boolean =>{
     recordGame.value.echange += echangeNotCollected;
     recordGame.value.money += moneyNotCollected;
     recordGame.value.score += 1000*pointNotCollected
+    recordGame.value.gather += gatherNotCollected
 
     line?.classList.add('removeLine');
     setTimeout(function () {
@@ -202,9 +233,16 @@ const removingLine=(item:Case) : boolean =>{
     }, 100 )
     setTimeout(function () {
     line?.classList.remove('removeLine');
+      console.log(recordGame.value.game.length)
+      if(recordGame.value.game.length === 0){
+        console.log('gagne')
+        openPopupWin.value = true
+        recordGame.value.score += 10000
+      }
   }, 101 )
   
   }
+
   return deleteLine;
 }
 
@@ -241,13 +279,14 @@ const activeCase = (item : Case) : void => {
         item.active = false;
         possibility.value = null;
         const suppressLine1 : boolean = removingLine(caseSelected1.value);
-
         if(caseSelected1.value.indexLigne !== item.indexLigne){
           setTimeout(function () {
             removingLine(item);
           },suppressLine1? 103 : 0);
         }
         caseSelected1.value = null;
+        console.log(recordGame.value.game.length === 0)
+        
         save();
         }else{
           playAudio('select', recordGame.value.UserOptions.sound);
@@ -339,6 +378,10 @@ const handlePopup = (e:any):void =>{
     case 'options':
       openPopupOptions.value = !openPopupOptions.value;
       break
+    case 'alert':
+      openPopupAlert.value = !openPopupAlert.value
+      messageAlert.value ='';
+      titleAlert.value =''
   }
 }
 
@@ -378,6 +421,7 @@ const handlePopupRestartChoice = (e:EnumPopupRestartChoice) :void => {
       save();
   }
   openPopupRestart.value = false;
+  openPopupWin.value = false;
 }
 
 const handleChangeColor = (e:{type:string, colorChoice:string}):void =>{
@@ -520,6 +564,68 @@ const activeEchangeMode = () : void => {
   }
 }
 
+const createGameWithExistingData = (tableau: Case[]) : Case[][] => {
+  const tableauLength: number = tableau.length
+  const numberSoustableau: number =  Math.ceil(tableauLength / 9);
+  const newTableau: Case[][] = []
+  for(let i = 0; i< numberSoustableau; i++){
+    const debut = i * 9
+    const fin = debut + 9;
+    const sousTableau = tableau.slice(debut, fin);
+    newTableau.push(sousTableau)
+  }
+
+  const lastLine = newTableau[newTableau.length - 1];
+  const lengthLastLine = lastLine.length
+  const dif = 9 - lengthLastLine;
+  if(lengthLastLine !== 9){
+    for(let i = 0; i< dif; i++){
+      const newCase:Case = defaultCaseTableau(0,0,'red')
+      newCase.visible=false;
+      newCase.number = 0;
+      newCase.item='none'
+      newTableau[newTableau.length - 1].push(newCase);
+
+    }
+  }
+
+  for(let i=0; i<newTableau.length;i++){
+      let indexCase = 0;
+      newTableau[i].forEach(e=>{
+          e.indexLigne = i;
+          e.indexColonne = indexCase;
+          indexCase ++ 
+        })
+        indexCase = 0
+      }
+
+    return newTableau;
+}
+
+const useGather = (): void => {
+  if(recordGame.value.lampSoluces.length > 0){
+    messageAlert.value='Vous ne pouvez pas utiliser ce bonus tant que la solution n\'a pas été utilisé';
+    titleAlert.value = `Bonus 'Regroupé'`
+    openPopupAlert.value= true;
+    return
+  }
+
+  if(recordGame.value.gather> 0){
+    const tableau: Case[][] = recordGame.value.game
+    const allNumber: Case[] = []
+    tableau.forEach((line: Case[]) => {
+      line.forEach((caseNumber: Case) => {
+        if(caseNumber.visible){
+          allNumber.push(caseNumber);
+        }
+      })
+    })
+    recordGame.value.game =  createGameWithExistingData(allNumber);
+    recordGame.value.gather -= 1
+    save();
+  }
+    
+}
 onMounted(() => {
     document.body.setAttribute('onselectstart', 'return false');
     document.body.setAttribute('onmousedown', 'if (!(event.target.classList.contains("slider") || event.target.classList.contains("color"))) return false;');    const getLocalStorage = localStorage.getItem('numberzilla');

@@ -42,13 +42,11 @@ const addMissingElement = (tableau: Case[][]) : Case[][] => {
 }
 
 const isValidLine=(ligne:Case[]) : boolean =>{
-  console.log(ligne.length)
-  console.log(defaultTotalCase)
     return ligne.length === defaultTotalCase;
 }
 
 export const isValidGame = (item : any) : boolean | Case[][]  => {
-    if(item.game !== undefined && isValidLine(item.game[0])){
+    if(item.game !== undefined && item.game.length !==0 && isValidLine(item.game[0])){
       isValidCase(item.game[0][0]);
   
       if(missingElementCase.length > 0){
@@ -99,6 +97,10 @@ export const matchJson = (item: any, validGame: boolean |Case[][] ) : GameRecord
 
   if( item.destroyeCases){
     result.destroyeCases = validGame? item.destroyeCases : 0;
+  }
+
+  if(item.gather){
+    result.gather = validGame ? item.gather : 0;
   }
 
   if(item.UserOptions.optionColors){

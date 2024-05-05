@@ -22,19 +22,25 @@ const getLine = (number:number, ligne: number, color:string) : Case[]=>{
 }
 
 export const determineBonus = () : string =>{
-    const randomValue :number = Math.random();
-    let result : string;
-  
-    if (randomValue < 0.004) {
-        result = 'lamp';
-    } else if (randomValue < 0.014) { 
-        result = 'money';
-    } else if (randomValue < 0.024) {
-        result = '1000pts';
-    } else if (randomValue < 0.030) { 
-        result = 'echanger';
-    } else {
+    const randomValue: number = Math.random() * 100;
+    let result: string;
+
+    if (randomValue < 97) {
         result = 'none';
+    } else {
+        const subRandomValue: number = Math.random() * 100; 
+
+        if (subRandomValue < 20) { 
+            result = 'lamp';
+        } else if (subRandomValue < 40) {
+            result = 'money';
+        } else if (subRandomValue < 60) { 
+            result = '1000pts';
+        } else if (subRandomValue < 80) { 
+            result = 'echanger';
+        } else {
+            result = 'gather'; 
+        }
     }
   
   return result;

@@ -7,6 +7,7 @@ export const DefaultRecordGame : GameRecord = {
     score:0, 
     money:0,
     lamp: 0, 
+    gather: 0,
     lampSoluces: [], 
     echange: 0,
     destroyeLines: 0, 

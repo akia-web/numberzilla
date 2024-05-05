@@ -5,6 +5,7 @@ export interface GameRecord {
  score: number,
  money:number,
  lamp: number,
+ gather: number,
  echange:number,
  lampSoluces: Case[],
  destroyeLines:number,
